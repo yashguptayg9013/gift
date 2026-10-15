@@ -10,12 +10,12 @@ import { Sound } from "./Sound";
 type Props = {
   dashboard: ResolvedImage;
   steering: ResolvedImage;
-  infotainment: ResolvedImage;
+  seats: ResolvedImage;
   speaker: ResolvedImage;
 };
 
 /** The interior: a full-frame cabin shot, two close studies, then sound. */
-export function Cockpit({ dashboard, steering, infotainment, speaker }: Props) {
+export function Cockpit({ dashboard, steering, seats, speaker }: Props) {
   const copy = site.copy.cockpit;
 
   return (
@@ -54,12 +54,12 @@ export function Cockpit({ dashboard, steering, infotainment, speaker }: Props) {
           <figure className="md:col-span-6 md:col-start-7 md:mt-[24vh]">
             <div data-reveal="mask" className="relative aspect-[4/3] overflow-hidden bg-carbon">
               <div data-reveal-inner className="absolute inset-0">
-                <Media image={infotainment} sizes="(min-width: 768px) 50vw, 100vw" />
+                <Media image={seats} sizes="(min-width: 768px) 50vw, 100vw" />
               </div>
             </div>
             <figcaption className="mt-5 flex items-baseline justify-between gap-6">
-              <span data-reveal="fade" className="t-display-sm">{copy.infotainment.title}</span>
-              <span data-reveal="fade" className="t-body text-right">{copy.infotainment.line}</span>
+              <span data-reveal="fade" className="t-display-sm">{copy.seats.title}</span>
+              <span data-reveal="fade" className="t-body text-right">{copy.seats.line}</span>
             </figcaption>
           </figure>
         </div>

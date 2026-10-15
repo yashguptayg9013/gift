@@ -44,7 +44,7 @@ export const site = {
     ],
     machine: {
       chapter: "02 — The Machine",
-      view: "Front three-quarter",
+      view: "Rear three-quarter",
       headline: "More than the\ndaily drive.",
       supporting: "A familiar silhouette, experienced from a different perspective.",
     },
@@ -65,7 +65,7 @@ export const site = {
       headline: "Your world.\nYour sound.",
       supporting: "The details that make every drive personal.",
       steering: { title: "Steering wheel", line: "Where every drive begins." },
-      infotainment: { title: "Infotainment", line: "The road ahead, the music, the call home." },
+      seats: { title: "Front seats", line: "Where every drive is felt." },
     },
     audio: {
       /** Set to false to hide the audio section entirely. */

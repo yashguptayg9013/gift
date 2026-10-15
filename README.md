@@ -65,26 +65,24 @@ All image paths live in **`src/data/media.ts`** (plus `gallery.ts` and `modifica
 ```
 public/
   images/
-    hero/            hero-front.webp                    ← opening shot, head-on, ideally at night
-    exterior/        exterior-front-three-quarter.webp  ← The Machine
-                     exterior-front.webp                ← Silhouette 01
-                     exterior-side.webp                 ← Silhouette 02
-                     exterior-rear.webp                 ← Silhouette 03
-                     drive-road.webp                    ← The Drive (and video poster)
-                     final-frame.webp                   ← closing shot, rear, tail lights on
-    details/         detail-headlight.webp  detail-grille.webp  detail-body-lines.webp
-                     detail-wheel.webp  detail-rear-light.webp  detail-interior-finish.webp
-    interior/        interior-dashboard.webp  interior-steering.webp
-                     interior-infotainment.webp  interior-speaker.webp
-    modifications/   modification-exterior.webp  modification-wheels.webp  modification-audio.webp
-                     modification-damping.webp  modification-interior.webp
-                     modification-lighting.webp  modification-future.webp
-    gallery/         gallery-01.webp … gallery-08.webp
-    sequence/        frame-0001.webp, frame-0002.webp …   (optional)
-  videos/            drive.mp4                                         (optional)
+    hero/            hero-front.webp                        ← opening shot (front three-quarter, night)
+    exterior/        exterior-rear-three-quarter.webp       ← The Machine, gallery, build log
+                     exterior-front.webp                    ← Silhouette 01, gallery
+                     exterior-side.webp                     ← Silhouette 02, The Drive, gallery
+                     exterior-rear.webp                     ← Silhouette 03, Final Frame
+    details/         detail-headlight.webp  detail-grille.webp  detail-wheel.webp
+                     detail-rear-light.webp  detail-door-handle.webp  detail-side-mirror.webp
+                     detail-roof-antenna.webp  detail-rear-bumper.webp
+    interior/        interior-dashboard.webp (also cropped for the steering wheel)
+                     interior-front-seats.webp  interior-rear-seats.webp  interior-speaker.webp
+    modifications/   modification-damping.webp              ← still a placeholder
+    sequence/        frame-0001.webp, frame-0002.webp …     (optional)
+  videos/            drive.mp4                                (optional)
 ```
 
-These are expected filenames, not files that already exist. The extension doesn't matter: `hero-front.jpg` or `hero-front.png` fills the `hero-front.webp` slot too, so phone photos can go in as they are. Convert iPhone `.heic` files to JPG first, because browsers can't display HEIC.
+The 16 supplied photos are already in place. They were trimmed of contact-sheet slicing edges, and #15 was split into front and rear seats. Several photos fill more than one slot, so replacing a file updates every section that uses it. To give a section a different photo, add the file and change its `src` in `src/data/media.ts`.
+
+The extension doesn't matter: `hero-front.jpg` or `hero-front.png` fills the `hero-front.webp` slot too, so phone photos can go in as they are. Convert iPhone `.heic` files to JPG first, because browsers can't display HEIC.
 
 **Uploading from a phone or browser (no coding):** on GitHub, open the folder (e.g. `public/images/hero/`) on your branch → **Add file → Upload files**. Rename each photo to its slot name (e.g. `hero-front.jpg`) and commit. Vercel redeploys with your photos in place.
 

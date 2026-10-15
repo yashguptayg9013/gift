@@ -33,8 +33,8 @@ export const modifications: Modification[] = [
     name: "Exterior changes",
     description: "Describe any exterior changes here — or note that the bodywork is as delivered.",
     image: {
-      src: "/images/modifications/modification-exterior.webp",
-      alt: "Exterior of the i20",
+      src: "/images/exterior/exterior-rear-three-quarter.webp",
+      alt: "Exterior of the black i20 at night",
       placeholder: { art: "side", viewBox: "120 60 1300 540" },
     },
     placeholder: true,
@@ -44,7 +44,7 @@ export const modifications: Modification[] = [
     name: "Wheels and tires",
     description: "Add the wheel and tire setup, and whether it is original or upgraded.",
     image: {
-      src: "/images/modifications/modification-wheels.webp",
+      src: "/images/details/detail-wheel.webp",
       alt: "Wheel and tire of the i20",
       placeholder: { art: "side", viewBox: "1060 290 240 300" },
     },
@@ -55,8 +55,8 @@ export const modifications: Modification[] = [
     name: "Audio",
     description: "Note the audio setup and anything added or changed.",
     image: {
-      src: "/images/modifications/modification-audio.webp",
-      alt: "Audio components in the i20",
+      src: "/images/interior/interior-speaker.webp",
+      alt: "Bose speaker grille in the i20",
       placeholder: { art: "speaker" },
     },
     placeholder: true,
@@ -77,8 +77,8 @@ export const modifications: Modification[] = [
     name: "Interior accessories",
     description: "List interior accessories such as mats, covers or organizers.",
     image: {
-      src: "/images/modifications/modification-interior.webp",
-      alt: "Interior accessories in the i20",
+      src: "/images/interior/interior-front-seats.webp",
+      alt: "The i20 front seats",
       placeholder: { art: "interior", viewBox: "400 200 900 1125" },
     },
     placeholder: true,
@@ -88,8 +88,8 @@ export const modifications: Modification[] = [
     name: "Lighting",
     description: "Describe any lighting changes, or confirm the lighting is original.",
     image: {
-      src: "/images/modifications/modification-lighting.webp",
-      alt: "Lighting on the i20",
+      src: "/images/details/detail-headlight.webp",
+      alt: "The i20 headlight",
       placeholder: { art: "front", viewBox: "236 340 300 375" },
     },
     placeholder: true,
@@ -99,7 +99,7 @@ export const modifications: Modification[] = [
     name: "Future modifications",
     description: "Ideas under consideration. Mark them Planned once you commit to them.",
     image: {
-      src: "/images/modifications/modification-future.webp",
+      src: "/images/exterior/exterior-front.webp",
       alt: "The i20 front end",
       placeholder: { art: "front", viewBox: "200 200 800 1000" },
     },

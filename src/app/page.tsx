@@ -33,7 +33,7 @@ export default function Home() {
       <Cockpit
         dashboard={resolveImage(media.cockpit.dashboard)}
         steering={resolveImage(media.cockpit.steering)}
-        infotainment={resolveImage(media.cockpit.infotainment)}
+        seats={resolveImage(media.cockpit.seats)}
         speaker={resolveImage(media.cockpit.speaker)}
       />
       <Drive image={resolveImage(media.drive.image)} video={resolveVideo(media.drive.video)} />
