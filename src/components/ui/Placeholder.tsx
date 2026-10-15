@@ -36,7 +36,7 @@ export function Placeholder({
       </svg>
       {site.showPlaceholderLabels && (
         <span className="placeholder-tag" aria-hidden>
-          Placeholder · {image.src}
+          {`Placeholder · public${image.src}`}
         </span>
       )}
     </Tag>
