@@ -84,7 +84,11 @@ public/
   videos/            drive.mp4                                         (optional)
 ```
 
-These are expected filenames, not files that already exist. Then:
+These are expected filenames, not files that already exist. The extension doesn't matter: `hero-front.jpg` or `hero-front.png` fills the `hero-front.webp` slot too, so phone photos can go in as they are. Convert iPhone `.heic` files to JPG first, because browsers can't display HEIC.
+
+**Uploading from a phone or browser (no coding):** on GitHub, open the folder (e.g. `public/images/hero/`) on your branch → **Add file → Upload files**. Rename each photo to its slot name (e.g. `hero-front.jpg`) and commit. Vercel redeploys with your photos in place.
+
+Then:
 
 1. **Export** as `.webp` or `.avif`. Use about 2400 px on the long edge for full-screen shots and about 1600 px for the rest. Next.js generates every responsive size and serves AVIF/WebP automatically.
 2. **Restart** `npm run dev` if a placeholder doesn't swap immediately. On Vercel, the next deploy picks the files up.

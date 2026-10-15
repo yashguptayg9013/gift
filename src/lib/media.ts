@@ -19,8 +19,18 @@ export function assetExists(src: string): boolean {
   }
 }
 
+/** Phone photos are usually .jpg — accept any web image format at the configured path. */
+const IMAGE_EXTENSIONS = [".webp", ".avif", ".jpg", ".jpeg", ".png", ".JPG", ".JPEG", ".PNG"];
+
+/**
+ * Finds the photo for a slot. "/images/hero/hero-front.webp" also matches
+ * hero-front.jpg, hero-front.png, etc., so photos can be uploaded as-is.
+ */
 export function resolveImage(image: VehicleImage): ResolvedImage {
-  return { ...image, available: assetExists(image.src) };
+  if (assetExists(image.src)) return { ...image, available: true };
+  const base = image.src.replace(/\.[a-z0-9]+$/i, "");
+  const found = IMAGE_EXTENSIONS.map((ext) => base + ext).find(assetExists);
+  return found ? { ...image, src: found, available: true } : { ...image, available: false };
 }
 
 export function resolveVideo(video: VehicleVideo): ResolvedVideo {
