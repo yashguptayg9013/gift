@@ -1,0 +1,438 @@
+@import "tailwindcss";
+@import "lenis/dist/lenis.css";
+
+/* ------------------------------------------------------------------
+   i20 AFTER DARK — design tokens
+   Colors, type, easing and layout primitives live here so the whole
+   site shares one visual system.
+------------------------------------------------------------------- */
+
+@theme {
+  --color-obsidian: #08090b;
+  --color-carbon: #0e0f12;
+  --color-graphite: #141619;
+  --color-steel: #92969d;
+  --color-silver: #e6e8ea;
+  --color-white: #ffffff;
+  --color-crimson: #d72638;
+  --color-line: rgb(230 232 234 / 0.12);
+  --color-line-strong: rgb(230 232 234 / 0.24);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-condensed), "Arial Narrow", ui-sans-serif, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+
+  --ease-cinema: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-reveal: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-soft: cubic-bezier(0.33, 1, 0.68, 1);
+
+  --breakpoint-3xl: 120rem;
+}
+
+:root {
+  --gutter: clamp(1.25rem, 4vw, 4rem);
+  --frame-max: 1680px;
+  --section-y: clamp(6rem, 14vw, 13rem);
+  --nav-h: 4.5rem;
+  color-scheme: dark;
+}
+
+html {
+  background: var(--color-obsidian);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-obsidian);
+  color: var(--color-silver);
+  font-family: var(--font-sans);
+  overflow-x: clip;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-crimson);
+  color: var(--color-white);
+}
+
+:focus-visible {
+  outline: 1px solid var(--color-silver);
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.lenis) {
+    scroll-behavior: smooth;
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* Layout                                                            */
+/* ---------------------------------------------------------------- */
+
+@utility frame {
+  width: 100%;
+  max-width: var(--frame-max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+@utility section-y {
+  padding-block: var(--section-y);
+}
+
+@utility hairline {
+  border-color: var(--color-line);
+}
+
+/* ---------------------------------------------------------------- */
+/* Typography                                                        */
+/* ---------------------------------------------------------------- */
+
+@utility t-hero {
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-transform: uppercase;
+  line-height: 0.84;
+  letter-spacing: -0.012em;
+  font-size: clamp(4.5rem, 15.5vw, 17rem);
+}
+
+@utility t-display-xl {
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-transform: uppercase;
+  line-height: 0.86;
+  letter-spacing: -0.01em;
+  font-size: clamp(3.25rem, 10vw, 11.5rem);
+}
+
+@utility t-display-lg {
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-transform: uppercase;
+  line-height: 0.88;
+  letter-spacing: -0.005em;
+  font-size: clamp(2.75rem, 7vw, 7.5rem);
+}
+
+@utility t-display-md {
+  font-family: var(--font-display);
+  font-weight: 500;
+  text-transform: uppercase;
+  line-height: 0.92;
+  letter-spacing: 0.005em;
+  font-size: clamp(1.875rem, 3.6vw, 3.75rem);
+}
+
+@utility t-display-sm {
+  font-family: var(--font-display);
+  font-weight: 500;
+  text-transform: uppercase;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  font-size: clamp(1.375rem, 2vw, 2rem);
+}
+
+@utility t-label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-steel);
+}
+
+@utility t-lead {
+  font-size: clamp(1.125rem, 1.55vw, 1.5rem);
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  color: rgb(230 232 234 / 0.86);
+}
+
+@utility t-body {
+  font-size: clamp(0.975rem, 1.05vw, 1.0625rem);
+  line-height: 1.7;
+  color: rgb(230 232 234 / 0.64);
+}
+
+/* Metallic silver type. Applied per word so masked/transformed words keep it. */
+@utility text-metal {
+  background-image: linear-gradient(
+    176deg,
+    #ffffff 0%,
+    #eef0f2 38%,
+    #b9bdc3 62%,
+    #8a8e95 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Masked word reveal primitives (see components/ui/SplitWords.tsx) */
+.word-mask {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-block: 0.08em 0.04em;
+  margin-block: -0.08em -0.04em;
+}
+.word-mask > [data-word] {
+  display: inline-block;
+  will-change: transform;
+}
+
+/* ---------------------------------------------------------------- */
+/* Media                                                             */
+/* ---------------------------------------------------------------- */
+
+.media-pos {
+  object-position: var(--pos-m, 50% 50%);
+}
+@media (min-width: 768px) {
+  .media-pos {
+    object-position: var(--pos, 50% 50%);
+  }
+}
+
+.placeholder-surface {
+  background:
+    radial-gradient(120% 85% at 50% 36%, #1c1f23 0%, #0e0f12 52%, #08090b 100%);
+}
+
+/* Top-centre, clear of captions. Full-screen scenes push it below the
+   nav by setting --ph-tag-top on an ancestor. */
+.placeholder-tag {
+  position: absolute;
+  left: 50%;
+  top: var(--ph-tag-top, 0.75rem);
+  transform: translateX(-50%);
+  max-width: calc(100% - 1.5rem);
+  padding: 0.3rem 0.5rem;
+  border: 1px dashed rgb(230 232 234 / 0.22);
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(230 232 234 / 0.5);
+  background: rgb(8 9 11 / 0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------------- */
+/* Atmosphere                                                        */
+/* ---------------------------------------------------------------- */
+
+/* Static film grain — rendered once, never animated. */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  pointer-events: none;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+.vignette {
+  background:
+    radial-gradient(130% 95% at 50% 45%, transparent 38%, rgb(8 9 11 / 0.55) 72%, rgb(8 9 11 / 0.95) 100%);
+}
+
+/* The narrow beam of light that sweeps across the opening frame. */
+.light-beam {
+  position: absolute;
+  top: -20%;
+  left: 0;
+  height: 140%;
+  width: clamp(5rem, 14vw, 16rem);
+  transform: translateX(-130%) skewX(-14deg);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(255 255 255 / 0.05) 30%,
+    rgb(255 255 255 / 0.22) 50%,
+    rgb(255 255 255 / 0.05) 70%,
+    transparent 100%
+  );
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+/* Soft-edged reveal that trails the beam (--reveal is set by GSAP). */
+[data-hero-reveal] {
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(var(--reveal, 200%) - 18%), transparent calc(var(--reveal, 200%) + 2%));
+  mask-image: linear-gradient(90deg, #000 calc(var(--reveal, 200%) - 18%), transparent calc(var(--reveal, 200%) + 2%));
+}
+.js.intro-fallback [data-hero-reveal] {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+/* Corner crop marks used as viewfinder framing. */
+.crop-mark {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: rgb(230 232 234 / 0.45);
+}
+
+/* ---------------------------------------------------------------- */
+/* Opening sequence gating                                           */
+/* Intro elements are hidden only when JS runs. If the motion layer  */
+/* never initialises, a timeout in <head> adds .intro-fallback and   */
+/* everything becomes visible.                                       */
+/* ---------------------------------------------------------------- */
+
+.js [data-intro] {
+  visibility: hidden;
+}
+.js.intro-fallback [data-intro] {
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: none !important;
+  clip-path: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .js [data-intro] {
+    visibility: visible;
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* Small interactions                                                */
+/* ---------------------------------------------------------------- */
+
+.link-line {
+  position: relative;
+}
+.link-line::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.6s var(--ease-reveal);
+}
+.link-line:hover::after,
+.link-line:focus-visible::after,
+.link-line[aria-current="true"]::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.cursor-ring {
+  transition:
+    scale 0.45s var(--ease-reveal),
+    border-color 0.3s ease,
+    background-color 0.3s ease;
+}
+.cursor-ring.is-active {
+  scale: 1.7;
+  border-color: rgb(215 38 56 / 0.8);
+  background-color: rgb(215 38 56 / 0.06);
+}
+
+@keyframes scroll-cue {
+  0% {
+    transform: translateY(-100%);
+  }
+  60%,
+  100% {
+    transform: translateY(100%);
+  }
+}
+.scroll-cue-line {
+  animation: scroll-cue 2.4s var(--ease-cinema) infinite;
+}
+
+input[type="range"].range {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  height: 24px;
+}
+input[type="range"].range::-webkit-slider-runnable-track {
+  height: 1px;
+  background: rgb(230 232 234 / 0.3);
+}
+input[type="range"].range::-moz-range-track {
+  height: 1px;
+  background: rgb(230 232 234 / 0.3);
+}
+input[type="range"].range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  margin-top: -5.5px;
+  border-radius: 999px;
+  background: var(--color-silver);
+}
+input[type="range"].range::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-silver);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* Silhouette: a readable grid by default; a stacked, pinned stage   */
+/* once SilhouetteMotion enables it (desktop + motion allowed).      */
+/* ---------------------------------------------------------------- */
+
+.sil-viewport {
+  display: grid;
+  gap: 1rem;
+}
+.sil-frame {
+  position: relative;
+  aspect-ratio: 4 / 3;
+}
+@media (min-width: 768px) {
+  .sil-viewport {
+    grid-template-columns: 1fr 1fr;
+  }
+  .sil-frame {
+    aspect-ratio: 16 / 9;
+  }
+}
+.sil-pinned [data-sil-stage] {
+  height: 100svh;
+  min-height: 640px;
+  padding-top: var(--nav-h);
+  padding-bottom: 0;
+}
+.sil-pinned .sil-viewport {
+  display: block;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 21 / 9;
+  max-height: 56vh;
+}
+.sil-pinned .sil-frame {
+  position: absolute;
+  inset: 0;
+  aspect-ratio: auto;
+}
+.sil-pinned .sil-progress {
+  display: flex;
+}
