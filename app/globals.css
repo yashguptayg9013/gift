@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-display: var(--font-playfair);
+
+  --color-cream-50: #fffaf3;
+  --color-cream-100: #fdf1e1;
+  --color-cream-200: #f8e2c6;
+  --color-brand-50: #fff1f3;
+  --color-brand-100: #ffe0e6;
+  --color-brand-500: #e11d48;
+  --color-brand-600: #be123c;
+  --color-brand-700: #9f1239;
+  --color-ink: #2a1a14;
+  --color-muted: #6b5a51;
+  --color-gold: #b7791f;
+  --color-whatsapp: #25d366;
+}
+
+body {
+  background: var(--color-cream-50);
+  color: var(--color-ink);
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+}
+@utility btn-primary {
+  @apply btn bg-brand-600 text-white hover:bg-brand-700;
+}
+@utility btn-outline {
+  @apply btn border border-ink/15 bg-white text-ink hover:border-ink/40;
+}
+@utility btn-whatsapp {
+  @apply btn bg-whatsapp text-white hover:brightness-95;
+}
+@utility input {
+  @apply w-full rounded-xl border border-ink/15 bg-white px-4 py-3 text-ink outline-none placeholder:text-muted/60 focus:border-brand-500 focus:ring-2 focus:ring-brand-100;
+}
