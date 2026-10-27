@@ -12,6 +12,7 @@ import {
   SimilarDecisions,
 } from "@/components/Evaluation";
 import { DecidePanel, DecisionRecord } from "@/components/JournalEntry";
+import SecondOpinionPanel from "@/components/SecondOpinion";
 import { Badge, Button, ButtonLink, CategoryLabel, Loading, formatDate } from "@/components/ui";
 import { evaluate } from "@/lib/engine";
 import { deleteDecision, saveDecision, useAppState, useHydrated } from "@/lib/store";
@@ -85,9 +86,10 @@ export default function DecisionPage() {
       <AlternativesTable decision={decision} settings={settings} />
       <ProsCons decision={decision} />
       <SimilarDecisions ev={ev} />
+      <SecondOpinionPanel decision={decision} ev={ev} settings={settings} />
 
       {decision.status === "open" ? (
-        <DecidePanel key={decision.updatedAt} decision={decision} score={ev.score} />
+        <DecidePanel key={decision.id} decision={decision} score={ev.score} />
       ) : (
         <DecisionRecord decision={decision} onReopen={reopen} />
       )}

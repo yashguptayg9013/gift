@@ -61,6 +61,26 @@ export interface Review {
   lessons: string;
 }
 
+export interface SecondOpinion {
+  /** How Claude's view compares with the engine's lean. */
+  stance: "agree" | "partly_agree" | "disagree";
+  recommendation: string;
+  summary: string;
+  blindSpots: string[];
+  risks: string[];
+  questions: string[];
+  alternatives: string[];
+  confidence: "low" | "medium" | "high";
+}
+
+export interface StoredSecondOpinion extends SecondOpinion {
+  createdAt: string;
+  /** Model that actually answered (may differ from the requested one after a fallback). */
+  model: string;
+  /** Engine score the opinion was given against. */
+  engineScore: number;
+}
+
 export interface Decision {
   id: string;
   title: string;
@@ -99,4 +119,5 @@ export interface Decision {
   /** Engine score captured at the moment of deciding. */
   scoreAtDecision?: number;
   review?: Review;
+  secondOpinion?: StoredSecondOpinion;
 }

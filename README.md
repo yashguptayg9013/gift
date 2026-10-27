@@ -2,7 +2,7 @@
 
 A private app for thinking through decisions like *“Should I buy this MacBook?”*, *“Should I take this job?”* or *“Should I travel to Japan in December?”* — and a decision journal that shows, months later, whether your reasoning was actually right.
 
-Everything is stored in your browser's `localStorage`. Nothing is sent to a server; use **Settings → Export backup** to save or move your data.
+Everything is stored in your browser's `localStorage`. Nothing is sent to a server unless you ask Claude for a second opinion (see below); use **Settings → Export backup** to save or move your data.
 
 ## What it evaluates
 
@@ -19,6 +19,21 @@ Each decision gets a 0–100 score and a recommendation (Strong yes → Strong n
 | **Your track record** | How your past, reviewed decisions in the same category turned out. |
 
 Dimensions you leave empty don't count. Easy-to-undo decisions get a small nudge up, hard-to-undo ones a nudge down. The report also lists insights: trade-offs, major cons, a gap between your gut feeling and the analysis, a tendency to overestimate value in a category, and lessons from similar past decisions.
+
+## AI second opinion (optional)
+
+On any decision you can press **Ask Claude** to get a second opinion from Claude (`claude-opus-5-5`). It says whether it agrees with the engine, then points out blind spots, risks, questions to ask yourself and alternatives you didn't list. The opinion is saved with the decision in your journal.
+
+This is the only feature that sends data anywhere. When you press the button, the app sends **that one decision**, your financial settings and priorities, and up to three similar past decisions to Anthropic's API through the app's server. Nothing else in your journal leaves the browser.
+
+Setup — the server needs these environment variables (e.g. in `.env.local`, or in your Vercel project settings):
+
+```bash
+ANTHROPIC_API_KEY=sk-ant-...        # your Anthropic API key — calls are billed to it
+SECOND_OPINION_PASSCODE=some-secret # required in production; enter the same value in Settings
+```
+
+The passcode stops other people from running up your API bill through a deployed copy of the app. In production the feature stays off until it's set. In `npm run dev` it's optional.
 
 ## The journal
 
@@ -41,4 +56,6 @@ Built with Next.js (App Router), React 19, Tailwind CSS v4 and TypeScript.
 - `lib/engine.ts` — the scoring engine
 - `lib/journal.ts` — journal statistics and calibration
 - `lib/store.ts` — localStorage persistence, import/export
+- `lib/brief.ts` — the decision summary sent to Claude
+- `app/api/second-opinion/route.ts` — server route that calls the Claude API
 - `app/` — pages: dashboard, new/edit decision, decision report, journal, settings

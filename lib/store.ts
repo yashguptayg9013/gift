@@ -136,3 +136,23 @@ export function importJson(text: string) {
 export function resetAll() {
   write(EMPTY);
 }
+
+/** Kept apart from the journal so it never ends up in an exported backup. */
+const PASSCODE_KEY = "decision-engine:passcode";
+
+export function getPasscode() {
+  try {
+    return window.localStorage.getItem(PASSCODE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+export function setPasscode(value: string) {
+  try {
+    if (value) window.localStorage.setItem(PASSCODE_KEY, value);
+    else window.localStorage.removeItem(PASSCODE_KEY);
+  } catch {
+    // Storage blocked: the passcode just won't be remembered.
+  }
+}

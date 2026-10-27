@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_SETTINGS, blankDecision, exampleDecisions } from "./defaults";
 import { affordability, evaluate, findSimilar, futureValue, totalCost } from "./engine";
+import { MAX_BRIEF_CHARS, buildBrief } from "./brief";
 import { correlation, journalStats } from "./journal";
 import type { Decision } from "./types";
 
@@ -127,5 +128,22 @@ describe("journalStats", () => {
   it("needs at least three points for a correlation", () => {
     expect(correlation([1, 2], [1, 2])).toBeNull();
     expect(correlation([1, 2, 3], [3, 2, 1])).toBeCloseTo(-1);
+  });
+});
+
+describe("buildBrief", () => {
+  it("includes the inputs, the engine's verdict and lessons from similar decisions", () => {
+    const history = exampleDecisions();
+    const d = history.find((h) => h.id === "ex-macbook")!;
+    const ev = evaluate(d, DEFAULT_SETTINGS, history);
+    const brief = buildBrief(d, DEFAULT_SETTINGS, ev);
+    expect(brief).toContain("# Decision: Should I buy this MacBook?");
+    expect(brief).toContain("MacBook Air: upfront $1,299");
+    expect(brief).toContain("Career growth (importance 3): strongly helps");
+    expect(brief).toContain(`Overall score: ${ev.score}/100`);
+    expect(brief).toContain("lesson: Gadgets don't create habits");
+    // Open decisions in the journal are not shared.
+    expect(brief).not.toContain("Japan");
+    expect(brief.length).toBeLessThan(MAX_BRIEF_CHARS);
   });
 });

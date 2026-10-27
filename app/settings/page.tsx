@@ -4,10 +4,12 @@ import { useRef, useState } from "react";
 import { Button, Card, CardTitle, Field, Loading, NumberInput, TextInput, inputClass } from "@/components/ui";
 import {
   exportJson,
+  getPasscode,
   importJson,
   loadExamples,
   resetAll,
   saveSettings,
+  setPasscode,
   uid,
   useAppState,
   useHydrated,
@@ -21,6 +23,7 @@ export default function SettingsPage() {
   const { settings, decisions } = useAppState();
   const [newPriority, setNewPriority] = useState("");
   const [message, setMessage] = useState("");
+  const [passcode, setPasscodeDraft] = useState(getPasscode);
   const fileRef = useRef<HTMLInputElement>(null);
 
   if (!hydrated) return <Loading />;
@@ -159,6 +162,28 @@ export default function SettingsPage() {
             Add
           </Button>
         </div>
+      </Card>
+
+      <Card>
+        <CardTitle hint="Claude can review a decision and point out what the numbers miss.">AI second opinion</CardTitle>
+        <Field
+          label="Passcode"
+          hint="only needed if the server sets SECOND_OPINION_PASSCODE; stays in this browser"
+        >
+          <TextInput
+            type="password"
+            autoComplete="off"
+            value={passcode}
+            onChange={(e) => {
+              setPasscodeDraft(e.target.value);
+              setPasscode(e.target.value);
+            }}
+          />
+        </Field>
+        <p className="mt-3 text-xs text-muted">
+          Asking for a second opinion sends that one decision, your financial settings and priorities, and up to three
+          similar past decisions to Anthropic&apos;s API. Nothing is sent unless you press “Ask Claude”.
+        </p>
       </Card>
 
       <Card>
