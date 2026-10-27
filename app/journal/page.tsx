@@ -4,26 +4,28 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import DecisionRow from "@/components/DecisionRow";
 import { Card, CardTitle, Loading, Stat, TextInput, inputClass } from "@/components/ui";
-import { evaluate } from "@/lib/engine";
+import { evaluate, formatNumber } from "@/lib/engine";
+import type { Dict } from "@/lib/i18n";
 import { journalStats } from "@/lib/journal";
-import { useAppState, useHydrated } from "@/lib/store";
+import { useAppState, useHydrated, useT } from "@/lib/store";
 import { CATEGORIES, type Category, type Decision } from "@/lib/types";
 
 type StatusFilter = "all" | Decision["status"];
 
 const pct = (x: number | null) => (x === null ? "—" : `${Math.round(x * 100)}%`);
 
-function describeCorrelation(r: number | null) {
-  if (r === null) return "Needs 3+ reviewed decisions you acted on";
-  if (r >= 0.5) return "Strongly predicts outcomes";
-  if (r >= 0.2) return "Somewhat predicts outcomes";
-  if (r > -0.2) return "No real link to outcomes";
-  return "Points the wrong way";
+function describeCorrelation(r: number | null, t: Dict) {
+  if (r === null) return t.journal.corrNeedsData;
+  if (r >= 0.5) return t.journal.corrStrong;
+  if (r >= 0.2) return t.journal.corrSome;
+  if (r > -0.2) return t.journal.corrNone;
+  return t.journal.corrWrong;
 }
 
 export default function JournalPage() {
   const hydrated = useHydrated();
   const { decisions, settings } = useAppState();
+  const t = useT();
   const [status, setStatus] = useState<StatusFilter>("all");
   const [category, setCategory] = useState<Category | "all">("all");
   const [query, setQuery] = useState("");
@@ -45,7 +47,8 @@ export default function JournalPage() {
 
   if (!hydrated) return <Loading />;
 
-  const fmt = (r: number | null) => (r === null ? "—" : r.toFixed(2));
+  const { locale } = settings;
+  const fmt = (r: number | null) => (r === null ? "—" : formatNumber(r, locale, 2));
   const gutWins =
     stats.engineCalibration !== null &&
     stats.gutCalibration !== null &&
@@ -54,49 +57,48 @@ export default function JournalPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Decision journal</h1>
-        <p className="text-sm text-muted">Every call you&apos;ve made, and how good your reasoning turned out to be.</p>
+        <h1 className="text-2xl font-semibold tracking-tight">{t.journal.title}</h1>
+        <p className="text-sm text-muted">{t.journal.subtitle}</p>
       </div>
 
       <Card>
-        <CardTitle hint="Gets sharper with every decision you review.">What your journal says</CardTitle>
+        <CardTitle hint={t.journal.saysHint}>{t.journal.saysTitle}</CardTitle>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <Stat label="Avg outcome" value={stats.avgOutcome === null ? "—" : `${stats.avgOutcome.toFixed(1)}/5`} />
-          <Stat label="Sound reasoning" value={pct(stats.soundReasoningRate)} hint="right + unlucky" />
-          <Stat label="Engine accuracy" value={pct(stats.engineHitRate)} hint="its lean matched hindsight" />
-          <Stat label="Would repeat" value={pct(stats.wouldDecideSameRate)} />
+          <Stat
+            label={t.journal.avgOutcome}
+            value={stats.avgOutcome === null ? "—" : `${formatNumber(stats.avgOutcome, locale, 1)}/5`}
+          />
+          <Stat label={t.journal.sound} value={pct(stats.soundReasoningRate)} hint={t.journal.soundHint} />
+          <Stat label={t.journal.engineAccuracy} value={pct(stats.engineHitRate)} hint={t.journal.engineAccuracyHint} />
+          <Stat label={t.journal.repeat} value={pct(stats.wouldDecideSameRate)} />
         </div>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
           <div className="rounded-lg bg-background p-4">
-            <div className="text-xs uppercase tracking-wide text-muted">Engine score vs outcome</div>
+            <div className="text-xs uppercase tracking-wide text-muted">{t.journal.engineVsOutcome}</div>
             <div className="mt-1 font-mono text-lg">{fmt(stats.engineCalibration)}</div>
-            <div className="text-xs text-muted">{describeCorrelation(stats.engineCalibration)}</div>
+            <div className="text-xs text-muted">{describeCorrelation(stats.engineCalibration, t)}</div>
           </div>
           <div className="rounded-lg bg-background p-4">
-            <div className="text-xs uppercase tracking-wide text-muted">Gut feeling vs outcome</div>
+            <div className="text-xs uppercase tracking-wide text-muted">{t.journal.gutVsOutcome}</div>
             <div className="mt-1 font-mono text-lg">{fmt(stats.gutCalibration)}</div>
-            <div className="text-xs text-muted">{describeCorrelation(stats.gutCalibration)}</div>
+            <div className="text-xs text-muted">{describeCorrelation(stats.gutCalibration, t)}</div>
           </div>
         </div>
         {stats.engineCalibration !== null && stats.gutCalibration !== null && (
-          <p className="mt-3 text-sm">
-            {gutWins
-              ? "Your gut has been a better predictor than the structured analysis — your inputs may be missing something you sense intuitively."
-              : "The structured analysis has predicted outcomes at least as well as your gut. Keep writing things down."}
-          </p>
+          <p className="mt-3 text-sm">{gutWins ? t.journal.gutWins : t.journal.engineWins}</p>
         )}
 
         {stats.byCategory.length > 0 && (
           <div className="mt-5">
-            <div className="mb-2 text-xs uppercase tracking-wide text-muted">By category</div>
+            <div className="mb-2 text-xs uppercase tracking-wide text-muted">{t.journal.byCategory}</div>
             <ul className="space-y-1.5">
               {stats.byCategory.map((c) => {
                 const meta = CATEGORIES.find((x) => x.value === c.category)!;
                 return (
                   <li key={c.category} className="flex items-center gap-3 text-sm">
-                    <span className="w-28 shrink-0">
-                      {meta.emoji} {meta.label}
+                    <span className="w-28 shrink-0 truncate">
+                      {meta.emoji} {t.categories[meta.value]}
                     </span>
                     <div className="h-2 flex-1 overflow-hidden rounded-full bg-border">
                       <div
@@ -105,8 +107,10 @@ export default function JournalPage() {
                       />
                     </div>
                     <span className="w-36 shrink-0 text-right text-xs text-muted">
-                      {c.count} total ·{" "}
-                      {c.avgOutcome === null ? "no reviews" : `avg ${c.avgOutcome.toFixed(1)}/5`}
+                      {t.journal.catSummary(
+                        c.count,
+                        c.avgOutcome === null ? null : formatNumber(c.avgOutcome, locale, 1),
+                      )}
                     </span>
                   </li>
                 );
@@ -118,7 +122,7 @@ export default function JournalPage() {
 
       {stats.lessons.length > 0 && (
         <Card>
-          <CardTitle>Lessons learned</CardTitle>
+          <CardTitle>{t.journal.lessonsTitle}</CardTitle>
           <ul className="space-y-3">
             {stats.lessons.slice(0, 6).map(({ decision, lesson }) => (
               <li key={decision.id} className="border-l-2 border-accent pl-3">
@@ -134,28 +138,28 @@ export default function JournalPage() {
 
       <Card>
         <div className="mb-3 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
-          <TextInput placeholder="Search decisions…" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <TextInput placeholder={t.journal.search} value={query} onChange={(e) => setQuery(e.target.value)} />
           <select
-            aria-label="Status"
+            aria-label={t.journal.status}
             value={status}
             onChange={(e) => setStatus(e.target.value as StatusFilter)}
             className={`${inputClass} sm:w-auto`}
           >
-            <option value="all">All statuses</option>
-            <option value="open">Open</option>
-            <option value="decided">Decided</option>
-            <option value="reviewed">Reviewed</option>
+            <option value="all">{t.journal.allStatuses}</option>
+            <option value="open">{t.journal.statusOptions.open}</option>
+            <option value="decided">{t.journal.statusOptions.decided}</option>
+            <option value="reviewed">{t.journal.statusOptions.reviewed}</option>
           </select>
           <select
-            aria-label="Category"
+            aria-label={t.form.category}
             value={category}
             onChange={(e) => setCategory(e.target.value as Category | "all")}
             className={`${inputClass} sm:w-auto`}
           >
-            <option value="all">All categories</option>
+            <option value="all">{t.journal.allCategories}</option>
             {CATEGORIES.map((c) => (
               <option key={c.value} value={c.value}>
-                {c.emoji} {c.label}
+                {c.emoji} {t.categories[c.value]}
               </option>
             ))}
           </select>
@@ -164,10 +168,14 @@ export default function JournalPage() {
           <p className="py-6 text-center text-sm text-muted">
             {decisions.length === 0 ? (
               <>
-                No decisions yet. <Link href="/decisions/new" className="text-accent underline">Start one</Link>.
+                {t.journal.emptyBefore}
+                <Link href="/decisions/new" className="text-accent underline">
+                  {t.journal.emptyLink}
+                </Link>
+                .
               </>
             ) : (
-              "No decisions match these filters."
+              t.journal.noMatch
             )}
           </p>
         ) : (

@@ -1,16 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { saveDecision } from "@/lib/store";
+import type { Dict } from "@/lib/i18n";
+import { saveDecision, useAppState, useT } from "@/lib/store";
 import type { Choice, Decision, Verdict } from "@/lib/types";
 import { Badge, Button, Card, CardTitle, Field, Slider, TextArea, formatDate, inputClass } from "./ui";
 
-const REVIEW_IN = [
-  { label: "1 month", months: 1 },
-  { label: "3 months", months: 3 },
-  { label: "6 months", months: 6 },
-  { label: "1 year", months: 12 },
-];
+/** Quick picks for the review date; labels come from `decide.reviewIn` in the same order. */
+const REVIEW_IN_MONTHS = [1, 3, 6, 12];
 
 function monthsFromNow(months: number) {
   const d = new Date();
@@ -18,22 +15,23 @@ function monthsFromNow(months: number) {
   return d.toISOString().slice(0, 10);
 }
 
-export function choiceLabel(d: Decision) {
+export function choiceLabel(d: Decision, t: Dict) {
   switch (d.choice) {
     case "yes":
-      return "Yes, went ahead";
+      return t.choice.yes;
     case "no":
-      return "No, passed";
+      return t.choice.no;
     case "alternative":
-      return `Chose an alternative: ${d.alternatives.find((a) => a.id === d.chosenAlternativeId)?.name ?? "—"}`;
+      return t.choice.alternative(d.alternatives.find((a) => a.id === d.chosenAlternativeId)?.name ?? "—");
     case "deferred":
-      return "Deferred for now";
+      return t.choice.deferred;
     default:
-      return "Undecided";
+      return t.choice.undecided;
   }
 }
 
 export function DecidePanel({ decision, score }: { decision: Decision; score: number }) {
+  const t = useT();
   const [choice, setChoice] = useState<Choice>(score >= 50 ? "yes" : "no");
   const [altId, setAltId] = useState(decision.alternatives[0]?.id ?? "");
   const [rationale, setRationale] = useState("");
@@ -41,10 +39,10 @@ export function DecidePanel({ decision, score }: { decision: Decision; score: nu
   const [reviewAt, setReviewAt] = useState(monthsFromNow(3));
 
   const options: { value: Choice; label: string }[] = [
-    { value: "yes", label: "Yes" },
-    { value: "no", label: "No" },
-    ...(decision.alternatives.length ? [{ value: "alternative" as Choice, label: "An alternative" }] : []),
-    { value: "deferred", label: "Not now" },
+    { value: "yes", label: t.decide.yes },
+    { value: "no", label: t.decide.no },
+    ...(decision.alternatives.length ? [{ value: "alternative" as Choice, label: t.decide.alternative }] : []),
+    { value: "deferred", label: t.decide.notNow },
   ];
 
   const commit = () =>
@@ -62,9 +60,7 @@ export function DecidePanel({ decision, score }: { decision: Decision; score: nu
 
   return (
     <Card className="border-accent/40">
-      <CardTitle hint="Writing down your reasoning now is what makes the journal useful later.">
-        Make the call
-      </CardTitle>
+      <CardTitle hint={t.decide.hint}>{t.decide.title}</CardTitle>
       <div className="space-y-4">
         <div className="flex flex-wrap gap-2">
           {options.map((o) => (
@@ -81,51 +77,53 @@ export function DecidePanel({ decision, score }: { decision: Decision; score: nu
           ))}
         </div>
         {choice === "alternative" && (
-          <Field label="Which one?">
+          <Field label={t.decide.whichOne}>
             <select value={altId} onChange={(e) => setAltId(e.target.value)} className={inputClass}>
               {decision.alternatives.map((a) => (
                 <option key={a.id} value={a.id}>
-                  {a.name || "Untitled"}
+                  {a.name || t.common.untitled}
                 </option>
               ))}
             </select>
           </Field>
         )}
-        <Field label="Why?" hint="the reasoning you want to check later">
+        <Field label={t.decide.why} hint={t.decide.whyHint}>
           <TextArea value={rationale} onChange={(e) => setRationale(e.target.value)} />
         </Field>
-        <Field label="What do you expect to happen?" hint="a concrete, checkable prediction">
+        <Field label={t.decide.expect} hint={t.decide.expectHint}>
           <TextArea rows={2} value={expected} onChange={(e) => setExpected(e.target.value)} />
         </Field>
-        <Field label="Review it on">
+        <Field label={t.decide.reviewOn}>
           <div className="flex flex-wrap items-center gap-2">
             <input type="date" value={reviewAt} onChange={(e) => setReviewAt(e.target.value)} className={`${inputClass} w-auto`} />
-            {REVIEW_IN.map((r) => (
+            {REVIEW_IN_MONTHS.map((months, i) => (
               <button
-                key={r.months}
+                key={months}
                 type="button"
-                onClick={() => setReviewAt(monthsFromNow(r.months))}
+                onClick={() => setReviewAt(monthsFromNow(months))}
                 className="rounded-full border border-border px-2.5 py-1 text-xs text-muted hover:text-foreground"
               >
-                in {r.label}
+                {t.decide.reviewIn[i]}
               </button>
             ))}
           </div>
         </Field>
-        <Button onClick={commit}>Record decision</Button>
+        <Button onClick={commit}>{t.decide.record}</Button>
       </div>
     </Card>
   );
 }
 
-const VERDICTS: { value: Verdict; title: string; text: string; tone: "good" | "warn" | "bad" | "info" }[] = [
-  { value: "right", title: "Right call", text: "Sound reasoning, good result", tone: "good" },
-  { value: "unlucky", title: "Unlucky", text: "Sound reasoning, bad result", tone: "info" },
-  { value: "lucky", title: "Got lucky", text: "Weak reasoning, good result", tone: "warn" },
-  { value: "wrong", title: "Wrong call", text: "Weak reasoning, bad result", tone: "bad" },
+const VERDICTS: { value: Verdict; tone: "good" | "warn" | "bad" | "info" }[] = [
+  { value: "right", tone: "good" },
+  { value: "unlucky", tone: "info" },
+  { value: "lucky", tone: "warn" },
+  { value: "wrong", tone: "bad" },
 ];
 
 export function DecisionRecord({ decision, onReopen }: { decision: Decision; onReopen: () => void }) {
+  const t = useT();
+  const { locale } = useAppState().settings;
   const [reviewing, setReviewing] = useState(false);
   const due = decision.status === "decided" && decision.reviewAt && new Date(decision.reviewAt) <= new Date();
 
@@ -133,19 +131,19 @@ export function DecisionRecord({ decision, onReopen }: { decision: Decision; onR
     <>
       <Card>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-semibold">Your decision</h2>
-          {decision.decidedAt && <span className="text-xs text-muted">{formatDate(decision.decidedAt)}</span>}
+          <h2 className="font-semibold">{t.decide.yourDecision}</h2>
+          {decision.decidedAt && <span className="text-xs text-muted">{formatDate(decision.decidedAt, locale)}</span>}
         </div>
-        <p className="text-lg font-medium">{choiceLabel(decision)}</p>
+        <p className="text-lg font-medium">{choiceLabel(decision, t)}</p>
         {decision.rationale && (
           <div className="mt-3">
-            <div className="text-xs uppercase tracking-wide text-muted">Reasoning</div>
+            <div className="text-xs uppercase tracking-wide text-muted">{t.decide.reasoning}</div>
             <p className="mt-0.5 whitespace-pre-wrap text-sm">{decision.rationale}</p>
           </div>
         )}
         {decision.expectedOutcome && (
           <div className="mt-3">
-            <div className="text-xs uppercase tracking-wide text-muted">Expected outcome</div>
+            <div className="text-xs uppercase tracking-wide text-muted">{t.decide.expectedOutcome}</div>
             <p className="mt-0.5 whitespace-pre-wrap text-sm">{decision.expectedOutcome}</p>
           </div>
         )}
@@ -153,15 +151,19 @@ export function DecisionRecord({ decision, onReopen }: { decision: Decision; onR
           <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
             {decision.reviewAt && (
               <span className="mr-auto text-sm text-muted">
-                {due ? <Badge tone="warn">Review due</Badge> : `Review on ${formatDate(decision.reviewAt)}`}
+                {due ? (
+                  <Badge tone="warn">{t.decide.reviewDueBadge}</Badge>
+                ) : (
+                  t.decide.reviewOnDate(formatDate(decision.reviewAt, locale))
+                )}
               </span>
             )}
             <Button variant="ghost" onClick={onReopen}>
-              Reopen
+              {t.decide.reopen}
             </Button>
             {!reviewing && (
               <Button variant={due ? "primary" : "secondary"} onClick={() => setReviewing(true)}>
-                {due ? "Review now" : "Review early"}
+                {due ? t.decide.reviewNow : t.decide.reviewEarly}
               </Button>
             )}
           </div>
@@ -178,6 +180,7 @@ function ReviewPanel({ decision }: { decision: Decision }) {
   const [same, setSame] = useState(true);
   const [verdict, setVerdict] = useState<Verdict>("right");
   const [lessons, setLessons] = useState("");
+  const t = useT();
 
   const submit = () =>
     saveDecision({
@@ -188,28 +191,26 @@ function ReviewPanel({ decision }: { decision: Decision }) {
 
   return (
     <Card className="border-accent/40">
-      <CardTitle hint="Judge the reasoning separately from the result — good decisions can still turn out badly.">
-        Look back
-      </CardTitle>
+      <CardTitle hint={t.review.hint}>{t.review.title}</CardTitle>
       <div className="space-y-5">
         {decision.expectedOutcome && (
           <p className="rounded-md bg-background p-3 text-sm">
-            <span className="text-muted">You expected: </span>
+            <span className="text-muted">{t.review.youExpected}</span>
             {decision.expectedOutcome}
           </p>
         )}
-        <Field label="How did it actually turn out?">
+        <Field label={t.review.howDidItGo}>
           <Slider
             min={1}
             max={5}
             value={outcome}
             onChange={setOutcome}
-            left="Terrible"
-            right="Great"
+            left={t.review.terrible}
+            right={t.review.great}
             display={`${outcome}/5`}
           />
         </Field>
-        <Field label="Knowing what you know now, would you decide the same way?">
+        <Field label={t.review.sameAgain}>
           <div className="flex gap-2">
             {[true, false].map((v) => (
               <button
@@ -220,13 +221,13 @@ function ReviewPanel({ decision }: { decision: Decision }) {
                   same === v ? "border-accent bg-accent-soft text-accent" : "border-border hover:bg-background"
                 }`}
               >
-                {v ? "Yes" : "No"}
+                {v ? t.common.yes : t.common.no}
               </button>
             ))}
           </div>
         </Field>
         <div>
-          <span className="text-sm font-medium">Was your reasoning correct?</span>
+          <span className="text-sm font-medium">{t.review.reasoningCorrect}</span>
           <div className="mt-1.5 grid grid-cols-2 gap-2">
             {VERDICTS.map((v) => (
               <button
@@ -237,16 +238,16 @@ function ReviewPanel({ decision }: { decision: Decision }) {
                   verdict === v.value ? "border-accent bg-accent-soft" : "border-border hover:bg-background"
                 }`}
               >
-                <div className="text-sm font-medium">{v.title}</div>
-                <div className="text-xs text-muted">{v.text}</div>
+                <div className="text-sm font-medium">{t.review.verdicts[v.value].title}</div>
+                <div className="text-xs text-muted">{t.review.verdicts[v.value].text}</div>
               </button>
             ))}
           </div>
         </div>
-        <Field label="Lessons" hint="shown again when you face a similar decision">
+        <Field label={t.review.lessons} hint={t.review.lessonsHint}>
           <TextArea value={lessons} onChange={(e) => setLessons(e.target.value)} />
         </Field>
-        <Button onClick={submit}>Save review</Button>
+        <Button onClick={submit}>{t.review.save}</Button>
       </div>
     </Card>
   );
@@ -255,22 +256,24 @@ function ReviewPanel({ decision }: { decision: Decision }) {
 function ReviewRecord({ decision }: { decision: Decision }) {
   const r = decision.review!;
   const v = VERDICTS.find((x) => x.value === r.verdict)!;
+  const t = useT();
+  const { locale } = useAppState().settings;
   return (
     <Card>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-semibold">Looking back</h2>
-        <span className="text-xs text-muted">{formatDate(r.reviewedAt)}</span>
+        <h2 className="font-semibold">{t.review.lookingBack}</h2>
+        <span className="text-xs text-muted">{formatDate(r.reviewedAt, locale)}</span>
       </div>
       <div className="flex flex-wrap gap-2">
-        <Badge tone={v.tone}>{v.title}</Badge>
-        <Badge tone={r.outcome >= 4 ? "good" : r.outcome <= 2 ? "bad" : "info"}>Outcome {r.outcome}/5</Badge>
+        <Badge tone={v.tone}>{t.review.verdicts[v.value].title}</Badge>
+        <Badge tone={r.outcome >= 4 ? "good" : r.outcome <= 2 ? "bad" : "info"}>{t.review.outcomeBadge(r.outcome)}</Badge>
         <Badge tone={r.wouldDecideSame ? "good" : "warn"}>
-          {r.wouldDecideSame ? "Would decide the same" : "Would decide differently"}
+          {r.wouldDecideSame ? t.review.wouldSame : t.review.wouldDifferent}
         </Badge>
       </div>
       {r.lessons && (
         <div className="mt-3">
-          <div className="text-xs uppercase tracking-wide text-muted">Lessons</div>
+          <div className="text-xs uppercase tracking-wide text-muted">{t.review.lessons}</div>
           <p className="mt-0.5 whitespace-pre-wrap text-sm">{r.lessons}</p>
         </div>
       )}

@@ -1,3 +1,5 @@
+import { getDict, priorityName, type Dict, type Locale } from "./i18n";
+import en from "./i18n/en";
 import type { Alternative, Decision, Settings } from "./types";
 
 export type DimensionKey =
@@ -137,10 +139,20 @@ export function computeFinancials(d: Decision, settings: Settings): Financials {
   };
 }
 
-const WORD_RE = /[a-z0-9]+/g;
+// Letters with their combining marks, so Devanagari words aren't split at vowel signs.
+const WORD_RE = /[\p{L}\p{M}\p{N}]+/gu;
+/** Words every decision title shares in the supported languages ("should I buy…"). */
 const STOP_WORDS = new Set([
-  "should", "i", "a", "an", "the", "this", "that", "to", "in", "on", "for", "of",
-  "my", "buy", "get", "take", "do", "go", "new", "it", "or", "and", "be", "is",
+  // en
+  "should", "the", "this", "that", "for", "and", "buy", "get", "take", "new",
+  // es / pt
+  "debería", "debo", "devo", "comprar", "este", "esta", "esto", "para", "con", "com", "una", "uma", "aceptar", "aceitar", "viajar",
+  // fr
+  "dois", "acheter", "cette", "pour", "avec", "les", "des", "accepter", "partir",
+  // de
+  "soll", "ich", "kaufen", "diesen", "dieses", "diese", "eine", "einen", "für", "mit", "der", "die", "das", "annehmen",
+  // hi
+  "क्या", "मुझे", "चाहिए", "यह", "ख़रीदना", "ख़रीदनी", "ख़रीदने", "लेनी", "लेना", "करना", "में", "के", "की", "को", "एक", "वाली",
 ]);
 
 function keywords(text: string) {
@@ -149,7 +161,7 @@ function keywords(text: string) {
   );
 }
 
-export function findSimilar(d: Decision, history: Decision[], limit = 3): SimilarDecision[] {
+export function findSimilar(d: Decision, history: Decision[], t: Dict = en, limit = 3): SimilarDecision[] {
   const mine = keywords(d.title);
   return history
     .filter((h) => h.id !== d.id)
@@ -158,8 +170,8 @@ export function findSimilar(d: Decision, history: Decision[], limit = 3): Simila
       const sameCategory = h.category === d.category;
       const rank = shared.length * 2 + (sameCategory ? 1 : 0) + (h.review ? 0.5 : 0);
       const reason = shared.length
-        ? `mentions “${shared.slice(0, 2).join("”, “")}”`
-        : "same category";
+        ? t.engine.mentions(shared.slice(0, 2).map((w) => `“${w}”`).join(t.engine.listJoin))
+        : t.engine.sameCategory;
       return { decision: h, reason, rank, relevant: shared.length > 0 || sameCategory };
     })
     .filter((x) => x.relevant)
@@ -172,35 +184,25 @@ const acted = (d: Decision) => d.choice === "yes" || d.choice === "alternative";
 const outcomeScore = (outcome: number) => ((outcome - 1) / 4) * 100;
 const avg = (xs: number[]) => xs.reduce((s, x) => s + x, 0) / xs.length;
 
-function recommend(score: number, d: Decision, dominated?: Alternative): Recommendation {
-  if (dominated) {
-    return {
-      label: `Consider “${dominated.name}”`,
-      tone: "warn",
-      blurb: "An alternative you listed delivers similar value for noticeably less.",
-    };
+function recommend(score: number, d: Decision, t: Dict, dominated?: Alternative): Recommendation {
+  const r = t.engine.rec;
+  if (dominated) return { label: r.consider(dominated.name), tone: "warn", blurb: r.considerBlurb };
+  if (score >= 72) return { label: r.strongYes, tone: "good", blurb: r.strongYesBlurb };
+  if (score >= 60) return { label: r.leanYes, tone: "good", blurb: r.leanYesBlurb };
+  if (score >= 45) {
+    return { label: r.tossUp, tone: "info", blurb: d.reversibility >= 4 ? r.tossUpReversible : r.tossUpPermanent };
   }
-  if (score >= 72)
-    return { label: "Strong yes", tone: "good", blurb: "The analysis clearly supports this." };
-  if (score >= 60)
-    return { label: "Lean yes", tone: "good", blurb: "More points in favour than against." };
-  if (score >= 45)
-    return {
-      label: "Toss-up",
-      tone: "info",
-      blurb:
-        d.reversibility >= 4
-          ? "Close call, but it's easy to undo — trying it is a cheap experiment."
-          : "Close call and hard to undo — sleep on it or gather more information.",
-    };
-  if (score >= 32)
-    return { label: "Lean no", tone: "warn", blurb: "The downsides outweigh the upside for now." };
-  return { label: "Strong no", tone: "bad", blurb: "This doesn't fit your money or your priorities." };
+  if (score >= 32) return { label: r.leanNo, tone: "warn", blurb: r.leanNoBlurb };
+  return { label: r.strongNo, tone: "bad", blurb: r.strongNoBlurb };
 }
 
 export function evaluate(d: Decision, settings: Settings, history: Decision[]): Evaluation {
-  const { profile, priorities } = settings;
-  const fmt = (n: number) => formatMoney(n, profile.currency);
+  const { profile, priorities, locale } = settings;
+  const t = getDict(locale);
+  const e = t.engine;
+  const fmt = (n: number) => formatMoney(n, profile.currency, locale);
+  const num = (n: number, digits: number) => formatNumber(n, locale, digits);
+  const names = (ps: { id: string; name: string }[]) => ps.map((p) => priorityName(p, t)).join(e.listJoin);
   const budget = profile.monthlySavings;
   const insights: Insight[] = [];
   const fin = computeFinancials(d, settings);
@@ -209,55 +211,33 @@ export function evaluate(d: Decision, settings: Settings, history: Decision[]): 
   const costScore = affordability(d.upfrontCost, d.monthlyCost, budget);
   let costSummary: string;
   if (fin.totalCost <= 0) {
-    costSummary =
-      fin.totalCost < 0
-        ? `Net gain of ${fmt(-fin.totalCost)} over ${d.horizonYears} yr.`
-        : "No money involved.";
+    costSummary = fin.totalCost < 0 ? e.netGain(fmt(-fin.totalCost), d.horizonYears) : e.noMoney;
   } else {
-    costSummary = `${fmt(fin.totalCost)} total over ${d.horizonYears} yr (${fmt(fin.costPerYear)}/yr).`;
+    costSummary = e.costTotal(fmt(fin.totalCost), d.horizonYears, fmt(fin.costPerYear));
     if (fin.monthsOfSavings !== null && fin.monthsOfSavings >= 1) {
-      costSummary += ` Upfront = ${fin.monthsOfSavings.toFixed(1)} months of savings.`;
+      costSummary += e.upfrontMonths(num(fin.monthsOfSavings, 1));
     }
   }
-  if (budget <= 0 && fin.totalCost > 0) {
-    insights.push({
-      tone: "info",
-      text: "Set your monthly savings in Settings so cost can be judged against what you can actually afford.",
-    });
-  }
+  if (budget <= 0 && fin.totalCost > 0) insights.push({ tone: "info", text: e.setSavings });
   if (budget > 0 && d.monthlyCost > budget * 0.5) {
-    insights.push({
-      tone: "bad",
-      text: `The recurring ${fmt(d.monthlyCost)}/month eats more than half of your monthly savings.`,
-    });
+    insights.push({ tone: "bad", text: e.recurringHeavy(fmt(d.monthlyCost)) });
   }
   if (fin.monthsOfSavings !== null && fin.monthsOfSavings > 6) {
-    insights.push({
-      tone: "warn",
-      text: `The upfront cost equals ${fin.monthsOfSavings.toFixed(0)} months of savings — make sure your emergency fund stays intact.`,
-    });
+    insights.push({ tone: "warn", text: e.upfrontHeavy(num(fin.monthsOfSavings, 0)) });
   }
 
   // --- Long-term value --------------------------------------------------------
   const valueScore = clamp(d.longTermValue * 10);
-  const valueSummary =
-    d.longTermValue >= 8
-      ? "You expect this to matter for a long time."
-      : d.longTermValue >= 5
-        ? "Moderate lasting value."
-        : "Little lasting value expected — mostly a short-term want.";
+  const valueSummary = d.longTermValue >= 8 ? e.valueHigh : d.longTermValue >= 5 ? e.valueMid : e.valueLow;
 
   // --- Alternatives -------------------------------------------------------------
   const mainUtility = utility(d.longTermValue, d.upfrontCost, d.monthlyCost, budget);
   let altScore: number | null = null;
-  let altSummary = "No alternatives listed.";
+  let altSummary = e.noAlternatives;
   let best: Evaluation["bestAlternative"];
   let dominated: Alternative | undefined;
   if (d.alternatives.length === 0) {
-    insights.push({
-      tone: "info",
-      text: "List at least one alternative — even “do nothing” or “wait 3 months” — to see if this is really the best use of the resources.",
-    });
+    insights.push({ tone: "info", text: e.listAlternative });
   } else {
     for (const alt of d.alternatives) {
       const u = utility(alt.value, alt.upfrontCost, alt.monthlyCost, budget);
@@ -274,15 +254,12 @@ export function evaluate(d: Decision, settings: Settings, history: Decision[]): 
     }
     const gap = mainUtility - best!.utility;
     altScore = clamp(50 + gap * 2);
-    altSummary =
-      gap >= 0
-        ? `Beats every alternative you listed (best runner-up: ${best!.alternative.name}).`
-        : `“${best!.alternative.name}” looks like better value overall.`;
+    altSummary = gap >= 0 ? e.beatsAll(best!.alternative.name) : e.altBetter(best!.alternative.name);
     if (dominated) {
       const altTotal = totalCost(dominated.upfrontCost, dominated.monthlyCost, d.horizonYears);
       insights.push({
         tone: "warn",
-        text: `“${dominated.name}” gives nearly the same value (${dominated.value}/10 vs ${d.longTermValue}/10) for ${fmt(fin.totalCost - altTotal)} less.`,
+        text: e.dominated(dominated.name, dominated.value, d.longTermValue, fmt(fin.totalCost - altTotal)),
       });
     }
   }
@@ -290,28 +267,23 @@ export function evaluate(d: Decision, settings: Settings, history: Decision[]): 
   // --- Opportunity cost --------------------------------------------------------
   const opportunityScore = clamp(100 / (1 + fin.totalHours / WORK_MONTH_HOURS));
   const oppParts: string[] = [];
-  if (fin.workHours > 0) oppParts.push(`${round(fin.workHours)} h of work to pay for it`);
-  if (d.timeCostHours > 0) oppParts.push(`${round(d.timeCostHours)} h of your time`);
-  if (fin.foregoneGrowth > 0 && fin.totalCost > 0) {
-    oppParts.push(`${fmt(fin.investedValue)} if invested instead`);
-  }
-  const opportunitySummary = oppParts.length ? capitalize(oppParts.join(" · ")) + "." : "Practically free.";
+  if (fin.workHours > 0) oppParts.push(e.workHours(round(fin.workHours)));
+  if (d.timeCostHours > 0) oppParts.push(e.timeHours(round(d.timeCostHours)));
+  if (fin.foregoneGrowth > 0 && fin.totalCost > 0) oppParts.push(e.ifInvestedInstead(fmt(fin.investedValue)));
+  const opportunitySummary = oppParts.length ? capitalize(oppParts.join(" · ")) + "." : e.practicallyFree;
   if (fin.workHours > WORK_MONTH_HOURS) {
-    insights.push({
-      tone: "warn",
-      text: `You'd work about ${(fin.workHours / WORK_MONTH_HOURS).toFixed(1)} months to pay for this. Would you trade those months for it?`,
-    });
+    insights.push({ tone: "warn", text: e.workMonths(num(fin.workHours / WORK_MONTH_HOURS, 1)) });
   }
   if (fin.foregoneGrowth > 0 && fin.totalCost > 0 && profile.investmentReturn > 0) {
     insights.push({
       tone: "info",
-      text: `Invested at ${profile.investmentReturn}%/yr, the same money would be ${fmt(fin.investedValue)} after ${d.horizonYears} yr (+${fmt(fin.foregoneGrowth)}).`,
+      text: e.investedInsight(profile.investmentReturn, fmt(fin.investedValue), d.horizonYears, fmt(fin.foregoneGrowth)),
     });
   }
 
   // --- Priorities -------------------------------------------------------------
   let priorityScore: number | null = null;
-  let prioritySummary = "Not rated against your priorities yet.";
+  let prioritySummary = e.notRated;
   const rated = priorities.filter((p) => (d.priorityImpacts[p.id] ?? 0) !== 0);
   if (rated.length > 0) {
     const weighted = rated.reduce((s, p) => s + p.weight * d.priorityImpacts[p.id], 0);
@@ -321,49 +293,39 @@ export function evaluate(d: Decision, settings: Settings, history: Decision[]): 
     priorityScore = clamp(50 + 50 * (weighted / maxWeighted) * (0.6 + 0.4 * coverage));
     const helps = rated.filter((p) => d.priorityImpacts[p.id] > 0);
     const hurts = rated.filter((p) => d.priorityImpacts[p.id] < 0);
-    prioritySummary = [
-      helps.length ? `Helps: ${helps.map((p) => p.name).join(", ")}` : "",
-      hurts.length ? `Hurts: ${hurts.map((p) => p.name).join(", ")}` : "",
-    ]
+    prioritySummary = [helps.length ? e.helps(names(helps)) : "", hurts.length ? e.hurts(names(hurts)) : ""]
       .filter(Boolean)
       .join(" · ");
     const top = [...priorities].sort((a, b) => b.weight - a.weight)[0];
     if (top && (d.priorityImpacts[top.id] ?? 0) <= -2) {
-      insights.push({
-        tone: "bad",
-        text: `This strongly works against your top priority, “${top.name}”.`,
-      });
+      insights.push({ tone: "bad", text: e.topPriority(priorityName(top, t)) });
     }
     if (helps.length && hurts.length) {
-      insights.push({
-        tone: "info",
-        text: `Trade-off: you gain on ${helps.map((p) => p.name).join(", ")} but give up on ${hurts.map((p) => p.name).join(", ")}.`,
-      });
+      insights.push({ tone: "info", text: e.tradeOff(names(helps), names(hurts)) });
     }
   } else if (priorities.length > 0) {
-    insights.push({ tone: "info", text: "Rate how this affects your priorities — it's the most personal part of the analysis." });
+    insights.push({ tone: "info", text: e.ratePriorities });
   }
 
   // --- Pros / cons --------------------------------------------------------------
   let prosConsScore: number | null = null;
-  let prosConsSummary = "No pros or cons listed.";
+  let prosConsSummary = e.noProsCons;
   const pros = d.pros.reduce((s, a) => s + a.weight, 0);
   const cons = d.cons.reduce((s, a) => s + a.weight, 0);
   if (d.pros.length + d.cons.length > 0) {
     prosConsScore = clamp((100 * (pros + 1)) / (pros + cons + 2));
-    prosConsSummary = `${d.pros.length} pro${d.pros.length === 1 ? "" : "s"} (weight ${pros}) vs ${d.cons.length} con${d.cons.length === 1 ? "" : "s"} (weight ${cons}).`;
+    prosConsSummary = e.prosConsSummary(d.pros.length, pros, d.cons.length, cons);
     const majorCons = d.cons.filter((c) => c.weight === 3);
     if (majorCons.length) {
-      insights.push({
-        tone: "warn",
-        text: `Major con${majorCons.length > 1 ? "s" : ""} to resolve first: ${majorCons.map((c) => `“${c.text}”`).join(", ")}.`,
-      });
+      insights.push({ tone: "warn", text: e.majorCons(majorCons.map((c) => `“${c.text}”`).join(e.listJoin)) });
     }
   }
 
   // --- History ------------------------------------------------------------------
   let historyScore: number | null = null;
-  let historySummary = "Not enough reviewed decisions in this category yet.";
+  let historySummary = e.noHistory;
+  // Lower-case mid-sentence, except in German where nouns stay capitalised.
+  const categoryName = locale === "de" ? t.categories[d.category] : t.categories[d.category].toLowerCase();
   const reviewedPeers = history.filter(
     (h) => h.id !== d.id && h.category === d.category && h.review && acted(h),
   );
@@ -371,62 +333,52 @@ export function evaluate(d: Decision, settings: Settings, history: Decision[]): 
     const outcomes = reviewedPeers.map((h) => h.review!.outcome);
     historyScore = clamp(outcomeScore(avg(outcomes)));
     const same = reviewedPeers.filter((h) => h.review!.wouldDecideSame).length;
-    historySummary = `Past ${d.category} decisions you went ahead with averaged ${avg(outcomes).toFixed(1)}/5; you'd repeat ${same} of ${reviewedPeers.length}.`;
+    historySummary = e.historySummary(categoryName, num(avg(outcomes), 1), same, reviewedPeers.length);
     // Optimism bias: expected value vs how things actually turned out.
     const bias = avg(reviewedPeers.map((h) => h.longTermValue / 10 - (h.review!.outcome - 1) / 4));
     if (bias > 0.2) {
-      insights.push({
-        tone: "warn",
-        text: `Heads-up: for ${d.category} decisions you've tended to overestimate the value by about ${round(bias * 10)} points out of 10.`,
-      });
+      insights.push({ tone: "warn", text: e.overestimate(categoryName, round(bias * 10)) });
     } else if (bias < -0.2) {
-      insights.push({
-        tone: "good",
-        text: `For ${d.category} decisions you've tended to be conservative — they turned out better than you expected.`,
-      });
+      insights.push({ tone: "good", text: e.conservative(categoryName) });
     }
   }
-  const similar = findSimilar(d, history);
+  const similar = findSimilar(d, history, t);
   for (const s of similar) {
     if (s.decision.review?.lessons) {
-      insights.push({
-        tone: "info",
-        text: `Lesson from “${s.decision.title}”: ${s.decision.review.lessons}`,
-      });
+      insights.push({ tone: "info", text: e.lessonFrom(s.decision.title, s.decision.review.lessons) });
       break;
     }
   }
 
   // --- Combine --------------------------------------------------------------------
+  const dim = (key: DimensionKey, score: number | null, summary: string): Dimension => ({
+    key,
+    label: e.dims[key],
+    score,
+    weight: DIMENSION_WEIGHTS[key],
+    summary,
+  });
   const dimensions: Dimension[] = [
-    { key: "cost", label: "Cost", score: costScore, weight: DIMENSION_WEIGHTS.cost, summary: costSummary },
-    { key: "value", label: "Long-term value", score: valueScore, weight: DIMENSION_WEIGHTS.value, summary: valueSummary },
-    { key: "alternatives", label: "Alternatives", score: altScore, weight: DIMENSION_WEIGHTS.alternatives, summary: altSummary },
-    { key: "opportunity", label: "Opportunity cost", score: opportunityScore, weight: DIMENSION_WEIGHTS.opportunity, summary: opportunitySummary },
-    { key: "priorities", label: "Your priorities", score: priorityScore, weight: DIMENSION_WEIGHTS.priorities, summary: prioritySummary },
-    { key: "prosCons", label: "Pros & cons", score: prosConsScore, weight: DIMENSION_WEIGHTS.prosCons, summary: prosConsSummary },
-    { key: "history", label: "Your track record", score: historyScore, weight: DIMENSION_WEIGHTS.history, summary: historySummary },
+    dim("cost", costScore, costSummary),
+    dim("value", valueScore, valueSummary),
+    dim("alternatives", altScore, altSummary),
+    dim("opportunity", opportunityScore, opportunitySummary),
+    dim("priorities", priorityScore, prioritySummary),
+    dim("prosCons", prosConsScore, prosConsSummary),
+    dim("history", historyScore, historySummary),
   ];
   const scored = dimensions.filter((x) => x.score !== null);
   const base =
     scored.reduce((s, x) => s + x.score! * x.weight, 0) / scored.reduce((s, x) => s + x.weight, 0);
   // Easy-to-undo decisions have a capped downside, so they get a small nudge (and vice versa).
   const score = round(clamp(base + (d.reversibility - 3) * 3));
-  if (d.reversibility <= 2) {
-    insights.push({
-      tone: "info",
-      text: "This is hard to reverse. Ask: what would have to be true for this to be a mistake?",
-    });
-  }
+  if (d.reversibility <= 2) insights.push({ tone: "info", text: e.hardToReverse });
 
   const gap = d.gutFeeling - score;
   if (Math.abs(gap) >= 25) {
     insights.push({
       tone: "warn",
-      text:
-        gap > 0
-          ? `Your gut (${d.gutFeeling}) is much keener than the analysis (${score}). Is there a benefit you haven't written down — or is it just excitement talking?`
-          : `The analysis (${score}) is keener than your gut (${d.gutFeeling}). What's the hesitation you haven't put into words?`,
+      text: gap > 0 ? e.gutKeener(d.gutFeeling, score) : e.analysisKeener(score, d.gutFeeling),
     });
   }
 
@@ -446,7 +398,7 @@ export function evaluate(d: Decision, settings: Settings, history: Decision[]): 
 
   return {
     score,
-    recommendation: recommend(score, d, dominated),
+    recommendation: recommend(score, d, t, dominated),
     dimensions,
     insights,
     financials: fin,
@@ -456,9 +408,9 @@ export function evaluate(d: Decision, settings: Settings, history: Decision[]): 
   };
 }
 
-export function formatMoney(n: number, currency: string) {
+export function formatMoney(n: number, currency: string, locale: Locale = "en") {
   try {
-    return new Intl.NumberFormat(undefined, {
+    return new Intl.NumberFormat(locale, {
       style: "currency",
       currency,
       maximumFractionDigits: Math.abs(n) >= 100 || Number.isInteger(n) ? 0 : 2,
@@ -466,6 +418,10 @@ export function formatMoney(n: number, currency: string) {
   } catch {
     return `${currency} ${n.toFixed(0)}`;
   }
+}
+
+export function formatNumber(n: number, locale: Locale = "en", digits = 0) {
+  return new Intl.NumberFormat(locale, { maximumFractionDigits: digits, minimumFractionDigits: digits }).format(n);
 }
 
 function capitalize(s: string) {

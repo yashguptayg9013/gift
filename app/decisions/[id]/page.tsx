@@ -15,7 +15,7 @@ import { DecidePanel, DecisionRecord } from "@/components/JournalEntry";
 import SecondOpinionPanel from "@/components/SecondOpinion";
 import { Badge, Button, ButtonLink, CategoryLabel, Loading, formatDate } from "@/components/ui";
 import { evaluate } from "@/lib/engine";
-import { deleteDecision, saveDecision, useAppState, useHydrated } from "@/lib/store";
+import { deleteDecision, saveDecision, useAppState, useHydrated, useT } from "@/lib/store";
 
 const STATUS_TONE = { open: "info", decided: "warn", reviewed: "good" } as const;
 
@@ -24,6 +24,7 @@ export default function DecisionPage() {
   const router = useRouter();
   const hydrated = useHydrated();
   const { decisions, settings } = useAppState();
+  const t = useT();
   const decision = decisions.find((d) => d.id === id);
   const ev = useMemo(
     () => (decision ? evaluate(decision, settings, decisions) : null),
@@ -34,14 +35,14 @@ export default function DecisionPage() {
   if (!decision || !ev) {
     return (
       <div className="py-20 text-center">
-        <p className="mb-4 text-muted">That decision doesn&apos;t exist (anymore).</p>
-        <ButtonLink href="/">Back to dashboard</ButtonLink>
+        <p className="mb-4 text-muted">{t.common.notFound}</p>
+        <ButtonLink href="/">{t.common.backToDashboard}</ButtonLink>
       </div>
     );
   }
 
   const remove = () => {
-    if (window.confirm(`Delete “${decision.title}”? This can't be undone.`)) {
+    if (window.confirm(t.report.deleteConfirm(decision.title))) {
       deleteDecision(decision.id);
       router.push("/journal");
     }
@@ -62,17 +63,17 @@ export default function DecisionPage() {
       <div>
         <div className="mb-1 flex flex-wrap items-center gap-2">
           <CategoryLabel category={decision.category} />
-          <Badge tone={STATUS_TONE[decision.status]}>{decision.status}</Badge>
-          <span className="text-xs text-muted">· {formatDate(decision.createdAt)}</span>
+          <Badge tone={STATUS_TONE[decision.status]}>{t.status[decision.status]}</Badge>
+          <span className="text-xs text-muted">· {formatDate(decision.createdAt, settings.locale)}</span>
         </div>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <h1 className="text-2xl font-semibold tracking-tight">{decision.title}</h1>
           <div className="flex gap-1">
             <ButtonLink variant="secondary" href={`/decisions/${decision.id}/edit`}>
-              Edit
+              {t.common.edit}
             </ButtonLink>
             <Button variant="danger" onClick={remove}>
-              Delete
+              {t.common.delete}
             </Button>
           </div>
         </div>
@@ -85,7 +86,7 @@ export default function DecisionPage() {
       <DimensionBreakdown ev={ev} />
       <AlternativesTable decision={decision} settings={settings} />
       <ProsCons decision={decision} />
-      <SimilarDecisions ev={ev} />
+      <SimilarDecisions ev={ev} settings={settings} />
       <SecondOpinionPanel decision={decision} ev={ev} settings={settings} />
 
       {decision.status === "open" ? (

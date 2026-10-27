@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Nav from "@/components/Nav";
+import Nav, { Footer } from "@/components/Nav";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -31,9 +31,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <Nav />
         <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">{children}</main>
-        <footer className="mx-auto w-full max-w-4xl px-4 pb-8 text-xs text-muted sm:px-6">
-          Private by design — your decisions are stored only in this browser. Only a decision you send for an AI second opinion leaves it.
-        </footer>
+        <Footer />
       </body>
     </html>
   );

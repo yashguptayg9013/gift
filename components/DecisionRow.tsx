@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { isDueForReview } from "@/lib/journal";
+import { useAppState, useT } from "@/lib/store";
 import type { Decision } from "@/lib/types";
 import { choiceLabel } from "./JournalEntry";
 import { Badge, CategoryLabel, ScorePill, formatDate } from "./ui";
 
 export default function DecisionRow({ decision: d, score }: { decision: Decision; score: number }) {
+  const t = useT();
+  const { locale } = useAppState().settings;
   return (
     <Link
       href={`/decisions/${d.id}`}
@@ -17,19 +20,19 @@ export default function DecisionRow({ decision: d, score }: { decision: Decision
         <div className="truncate font-medium">{d.title}</div>
         <div className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
           <CategoryLabel category={d.category} />
-          <span>· {formatDate(d.createdAt)}</span>
-          {d.status !== "open" && <span>· {choiceLabel(d)}</span>}
+          <span>· {formatDate(d.createdAt, locale)}</span>
+          {d.status !== "open" && <span>· {choiceLabel(d, t)}</span>}
         </div>
       </div>
       <div className="shrink-0">
         {d.review ? (
           <Badge tone={d.review.outcome >= 4 ? "good" : d.review.outcome <= 2 ? "bad" : "info"}>
-            outcome {d.review.outcome}/5
+            {t.outcome(d.review.outcome)}
           </Badge>
         ) : isDueForReview(d) ? (
-          <Badge tone="warn">review due</Badge>
+          <Badge tone="warn">{t.reviewDue}</Badge>
         ) : (
-          <Badge tone="info">{d.status}</Badge>
+          <Badge tone="info">{t.status[d.status]}</Badge>
         )}
       </div>
     </Link>

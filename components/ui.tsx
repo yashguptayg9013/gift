@@ -3,6 +3,8 @@
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 import type { Tone } from "@/lib/engine";
+import type { Locale } from "@/lib/i18n";
+import { useT } from "@/lib/store";
 import { CATEGORIES, type Category } from "@/lib/types";
 
 export function Card({ className = "", ...props }: ComponentProps<"section">) {
@@ -199,6 +201,7 @@ const TONE_BG: Record<Tone, string> = {
 };
 
 export function ScoreRing({ score, size = 112 }: { score: number; size?: number }) {
+  const t = useT();
   const tone = toneForScore(score);
   const r = 44;
   const c = 2 * Math.PI * r;
@@ -220,7 +223,7 @@ export function ScoreRing({ score, size = 112 }: { score: number; size?: number 
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-3xl font-semibold tabular-nums text-foreground">{score}</span>
-        <span className="text-[10px] uppercase tracking-wider text-muted">score</span>
+        <span className="text-[10px] uppercase tracking-wider text-muted">{t.common.score}</span>
       </div>
     </div>
   );
@@ -248,10 +251,11 @@ export function ScorePill({ score }: { score: number }) {
 }
 
 export function CategoryLabel({ category }: { category: Category }) {
+  const t = useT();
   const c = CATEGORIES.find((x) => x.value === category) ?? CATEGORIES[CATEGORIES.length - 1];
   return (
     <span className="text-xs text-muted">
-      {c.emoji} {c.label}
+      {c.emoji} {t.categories[c.value]}
     </span>
   );
 }
@@ -267,9 +271,10 @@ export function Stat({ label, value, hint }: { label: string; value: ReactNode; 
 }
 
 export function Loading() {
-  return <div className="py-20 text-center text-sm text-muted">Loading…</div>;
+  const t = useT();
+  return <div className="py-20 text-center text-sm text-muted">{t.common.loading}</div>;
 }
 
-export function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+export function formatDate(iso: string, locale: Locale) {
+  return new Date(iso).toLocaleDateString(locale, { year: "numeric", month: "short", day: "numeric" });
 }

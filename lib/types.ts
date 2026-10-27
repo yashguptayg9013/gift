@@ -1,12 +1,15 @@
+import type { Locale } from "./i18n";
+
 export type Category = "purchase" | "career" | "travel" | "finance" | "personal" | "other";
 
-export const CATEGORIES: { value: Category; label: string; emoji: string }[] = [
-  { value: "purchase", label: "Purchase", emoji: "🛒" },
-  { value: "career", label: "Career", emoji: "💼" },
-  { value: "travel", label: "Travel", emoji: "✈️" },
-  { value: "finance", label: "Finance", emoji: "💰" },
-  { value: "personal", label: "Personal", emoji: "🌱" },
-  { value: "other", label: "Other", emoji: "🧩" },
+/** Labels live in the i18n dictionaries under `categories`. */
+export const CATEGORIES: { value: Category; emoji: string }[] = [
+  { value: "purchase", emoji: "🛒" },
+  { value: "career", emoji: "💼" },
+  { value: "travel", emoji: "✈️" },
+  { value: "finance", emoji: "💰" },
+  { value: "personal", emoji: "🌱" },
+  { value: "other", emoji: "🧩" },
 ];
 
 export interface Priority {
@@ -27,6 +30,7 @@ export interface Profile {
 }
 
 export interface Settings {
+  locale: Locale;
   profile: Profile;
   priorities: Priority[];
 }

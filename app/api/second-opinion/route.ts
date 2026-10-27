@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { MAX_BRIEF_CHARS } from "@/lib/brief";
+import { getDict, LOCALES } from "@/lib/i18n";
 import type { SecondOpinion } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -23,7 +24,10 @@ const OpinionSchema = z.object({
   confidence: z.enum(["low", "medium", "high"]).describe("How confident you are, given the information provided."),
 });
 
-const RequestSchema = z.object({ brief: z.string().min(1).max(MAX_BRIEF_CHARS) });
+const RequestSchema = z.object({
+  brief: z.string().min(1).max(MAX_BRIEF_CHARS),
+  locale: z.enum(LOCALES).default("en"),
+});
 
 const SYSTEM = `You give a candid second opinion on a personal decision someone is weighing in their private decision journal.
 
@@ -57,9 +61,9 @@ export async function POST(request: Request) {
     });
   }
 
-  let brief: string;
+  let input: z.infer<typeof RequestSchema>;
   try {
-    brief = RequestSchema.parse(await request.json()).brief;
+    input = RequestSchema.parse(await request.json());
   } catch {
     return json(400, { code: "bad_request", error: `The decision summary is missing or longer than ${MAX_BRIEF_CHARS} characters.` });
   }
@@ -73,8 +77,8 @@ export async function POST(request: Request) {
       // If a safety classifier declines, retry on Anthropic's recommended fallback model.
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
-      system: SYSTEM,
-      messages: [{ role: "user", content: brief }],
+      system: `${SYSTEM}\n\nWrite every text field of your answer in ${getDict(input.locale).englishName}.`,
+      messages: [{ role: "user", content: input.brief }],
     });
 
     if (response.stop_reason === "refusal") {

@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { DEFAULT_SETTINGS, exampleDecisions } from "./defaults";
+import { detectLocale, getDict, isLocale } from "./i18n";
 import type { Decision, Settings } from "./types";
 
 /**
@@ -20,13 +21,18 @@ const EMPTY: AppState = { settings: DEFAULT_SETTINGS, decisions: [] };
 let state: AppState | null = null;
 const listeners = new Set<() => void>();
 
+/** First visit: start in the browser's language. */
+function fresh(): AppState {
+  return { ...EMPTY, settings: { ...EMPTY.settings, locale: detectLocale() } };
+}
+
 function read(): AppState {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return EMPTY;
+    if (!raw) return fresh();
     return normalize(JSON.parse(raw));
   } catch {
-    return EMPTY;
+    return fresh();
   }
 }
 
@@ -35,6 +41,7 @@ function normalize(data: unknown): AppState {
   const settings = d.settings ?? DEFAULT_SETTINGS;
   return {
     settings: {
+      locale: isLocale(settings.locale) ? settings.locale : detectLocale(),
       profile: { ...DEFAULT_SETTINGS.profile, ...settings.profile },
       priorities: Array.isArray(settings.priorities) ? settings.priorities : DEFAULT_SETTINGS.priorities,
     },
@@ -74,6 +81,11 @@ function subscribe(listener: () => void) {
 
 export function useAppState() {
   return useSyncExternalStore(subscribe, getSnapshot, () => EMPTY);
+}
+
+/** Strings for the current language. */
+export function useT() {
+  return getDict(useAppState().settings.locale);
 }
 
 const noopSubscribe = () => () => {};
@@ -117,7 +129,10 @@ export function loadExamples() {
   );
   write({
     settings: { ...s.settings, priorities: [...s.settings.priorities, ...missingPriorities] },
-    decisions: [...s.decisions, ...exampleDecisions().filter((d) => !existing.has(d.id))],
+    decisions: [
+      ...s.decisions,
+      ...exampleDecisions(getDict(s.settings.locale)).filter((d) => !existing.has(d.id)),
+    ],
   });
 }
 
@@ -134,7 +149,8 @@ export function importJson(text: string) {
 }
 
 export function resetAll() {
-  write(EMPTY);
+  // Keep the language: wiping the journal shouldn't switch the UI back to English.
+  write({ ...EMPTY, settings: { ...EMPTY.settings, locale: getSnapshot().settings.locale } });
 }
 
 /** Kept apart from the journal so it never ends up in an exported backup. */
