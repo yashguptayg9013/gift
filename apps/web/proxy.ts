@@ -10,7 +10,8 @@ const PUBLIC_PATHS = ['/login', '/forgot-password', '/reset-password', '/design-
 
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
-  const hasSession = request.cookies.has('puja_at') || request.cookies.has('puja_rt');
+  // puja_rt is path-scoped to /api/v1/auth, so page requests rely on the non-secret puja_session hint.
+  const hasSession = request.cookies.has('puja_at') || request.cookies.has('puja_session');
   const isPublic = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   if (!isPublic && !hasSession) {
