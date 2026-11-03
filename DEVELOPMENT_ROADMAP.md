@@ -18,7 +18,7 @@ A feature is only marked ✅ when it works and has tests.
 
 ## Stage 4 — Authentication & permissions ✅
 - ✅ argon2id, JWT + rotating refresh sessions with reuse detection, lockout, password reset, session management
-- ✅ 70 fine-grained permissions, 7 editable role templates, backend guards, row-level rules
+- ✅ 65 fine-grained permissions, 7 editable role templates, backend guards, row-level rules
 - ✅ CSRF origin check, rate limiting, strict validation, audit log (append-only)
 - 🟢 Login/forgot/reset, account (sessions, preferences), admin users/roles/settings/numbering/audit UI
 
