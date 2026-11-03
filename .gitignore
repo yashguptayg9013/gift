@@ -1,0 +1,30 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# builds
+dist/
+.next/
+out/
+build/
+*.tsbuildinfo
+coverage/
+
+# env & secrets
+.env
+.env.*
+!.env.example
+*.pem
+
+# runtime
+storage/
+backups/*.sql.gz
+logs/
+*.log
+
+# tooling
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+test-results/
+playwright-report/
