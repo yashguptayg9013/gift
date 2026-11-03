@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { DocStatus, InspectionType, InventoryTxType, ItemType, LocationType, Prisma, PurchaseOrderStatus, RequisitionStatus } from '@prisma/client';
+import { InspectionType, InventoryTxType, ItemType, LocationType, Prisma, PurchaseOrderStatus, RequisitionStatus } from '@prisma/client';
 import { D, Decimal, m2, q4, serialize, ZERO } from '../../common/decimal';
 import { Errors } from '../../common/errors';
 import { AuthUser, hasPermission } from '../../common/request-context';

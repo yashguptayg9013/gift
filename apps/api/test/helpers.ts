@@ -4,7 +4,7 @@ import { PrismaClient } from '@prisma/client';
 import { ROLE_TEMPLATES } from '@puja/shared';
 import request from 'supertest';
 import TestAgent from 'supertest/lib/agent';
-import { bootstrap } from '../prisma/bootstrap';
+import { bootstrap } from '../src/database/bootstrap';
 import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/app.factory';
 import { loadEnv } from '../src/config/env';

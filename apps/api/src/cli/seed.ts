@@ -1,6 +1,12 @@
+/* eslint-disable no-console */
 import { PrismaClient } from '@prisma/client';
-import { bootstrap } from './bootstrap';
+import { bootstrap } from '../database/bootstrap';
 
+/**
+ * Idempotent bootstrap seed (roles, units, warehouse structure, stage and category
+ * definitions, first administrator from BOOTSTRAP_ADMIN_* when no users exist).
+ * Safe to run on every deploy.
+ */
 async function main() {
   const prisma = new PrismaClient();
   const { BOOTSTRAP_ADMIN_EMAIL: email, BOOTSTRAP_ADMIN_PASSWORD: password, BOOTSTRAP_ADMIN_NAME: name } = process.env;

@@ -12,7 +12,6 @@ import { RequestContextStore } from './common/request-context';
 
 /** Shared by main.ts and integration tests so both run the exact same pipeline. */
 export async function createApp(opts: { logger?: boolean } = {}): Promise<INestApplication> {
-  const e = env();
   const app = await NestFactory.create(AppModule, { bufferLogs: true, logger: opts.logger === false ? false : undefined });
   if (opts.logger !== false) app.useLogger(app.get(Logger));
   configureApp(app);

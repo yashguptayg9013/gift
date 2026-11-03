@@ -693,7 +693,7 @@ export class ProductionService {
 
   async assignWorkers(stageId: string, workerIds: string[], actor: AuthUser) {
     const orderId = await this.prisma.tx(async (tx) => {
-      const { order, stage } = await this.loadStage(tx, stageId);
+      const { order } = await this.loadStage(tx, stageId);
       if (([ProductionStatus.CLOSED, ProductionStatus.CANCELLED] as ProductionStatus[]).includes(order.status)) throw Errors.invalidState('Order is closed');
       const workers = await tx.worker.findMany({ where: { id: { in: workerIds }, isActive: true } });
       if (workers.length !== new Set(workerIds).size) throw Errors.validation('One or more workers are inactive or unknown');
