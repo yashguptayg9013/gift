@@ -1,7 +1,7 @@
 /** @type {import('jest').Config} */
 const base = {
   moduleFileExtensions: ['js', 'json', 'ts'],
-  transform: { '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.json', isolatedModules: true }] },
+  transform: { '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.json', diagnostics: false }] },
   testEnvironment: 'node',
 };
 module.exports = {

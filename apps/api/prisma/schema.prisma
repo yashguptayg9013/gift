@@ -368,16 +368,26 @@ model Item {
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
 
-  uomConversions  ItemUomConversion[]
-  batches         Batch[]
-  balances        StockBalance[]
-  movements       StockMovement[]
-  reservations    StockReservation[]
-  bom             Bom?
-  bomLines        BomLine[]
-  bomAlternatives BomLineAlternative[]
-  supplierItems   SupplierItem[]
-  customerPrices  CustomerPrice[]
+  uomConversions      ItemUomConversion[]
+  batches             Batch[]
+  balances            StockBalance[]
+  movements           StockMovement[]
+  reservations        StockReservation[]
+  bom                 Bom?
+  bomLines            BomLine[]
+  bomAlternatives     BomLineAlternative[]
+  supplierItems       SupplierItem[]
+  customerPrices      CustomerPrice[]
+  productionOrders    ProductionOrder[]         @relation("ProductionOrderItem")
+  productionMaterials ProductionMaterial[]      @relation("ProductionMaterialItem")
+  inspections         QualityInspection[]       @relation("InspectionItem")
+  poLines             PurchaseOrderLine[]       @relation("PoLineItem")
+  grnLines            GoodsReceiptLine[]        @relation("GrnLineItem")
+  supplierReturnLines SupplierReturnLine[]      @relation("SupplierReturnLineItem")
+  quotationLines      QuotationLine[]           @relation("QuotationLineItem")
+  salesOrderLines     SalesOrderLine[]          @relation("SoLineItem")
+  challanLines        DeliveryChallanLine[]     @relation("ChallanLineItem")
+  requisitionLines    PurchaseRequisitionLine[] @relation("RequisitionLineItem")
 
   @@index([type, isActive])
   @@index([productId])
@@ -758,6 +768,7 @@ model ProductionOrder {
   id                String           @id @default(cuid())
   number            String           @unique
   itemId            String
+  item              Item             @relation("ProductionOrderItem", fields: [itemId], references: [id])
   bomVersionId      String?
   bomVersion        BomVersion?      @relation(fields: [bomVersionId], references: [id])
   routeId           String?
@@ -800,6 +811,7 @@ model ProductionMaterial {
   productionOrder   ProductionOrder @relation(fields: [productionOrderId], references: [id], onDelete: Cascade)
   bomLineId         String?
   itemId            String
+  item              Item            @relation("ProductionMaterialItem", fields: [itemId], references: [id])
   /// item originally specified on the BOM when a substitute is used
   originalItemId    String?
   stageDefinitionId String?
@@ -890,6 +902,8 @@ model ProductionOutput {
   recordedAt        DateTime             @default(now())
   idempotencyKey    String?              @unique
   inventoryTxIds    String[]
+  /// [{ materialLineId, itemId, quantity }] consumed by this entry (used for exact reversal)
+  consumption       Json                 @default("[]")
   inspectionId      String?
   reversedAt        DateTime?
   reversedById      String?
@@ -1041,6 +1055,7 @@ model QualityInspection {
   type               InspectionType
   status             InspectionStatus          @default(PENDING)
   itemId             String
+  item               Item                      @relation("InspectionItem", fields: [itemId], references: [id])
   productionOrderId  String?
   productionOrder    ProductionOrder?          @relation(fields: [productionOrderId], references: [id])
   productionStageId  String?
@@ -1174,6 +1189,7 @@ model PurchaseRequisitionLine {
   requisitionId       String
   requisition         PurchaseRequisition @relation(fields: [requisitionId], references: [id], onDelete: Cascade)
   itemId              String
+  item                Item                @relation("RequisitionLineItem", fields: [itemId], references: [id])
   quantity            Decimal             @db.Decimal(18, 4)
   suggestedSupplierId String?
   remarks             String?
@@ -1225,6 +1241,7 @@ model PurchaseOrderLine {
   purchaseOrder    PurchaseOrder      @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
   lineNo           Int
   itemId           String
+  item             Item               @relation("PoLineItem", fields: [itemId], references: [id])
   description      String?
   /// quantity in purchase unit
   quantity         Decimal            @db.Decimal(18, 4)
@@ -1277,6 +1294,7 @@ model GoodsReceiptLine {
   purchaseOrderLineId String?
   purchaseOrderLine   PurchaseOrderLine? @relation(fields: [purchaseOrderLineId], references: [id])
   itemId              String
+  item                Item               @relation("GrnLineItem", fields: [itemId], references: [id])
   /// in purchase unit
   quantity            Decimal            @db.Decimal(18, 4)
   uomCode             String
@@ -1313,6 +1331,7 @@ model SupplierReturnLine {
   supplierReturnId    String
   supplierReturn      SupplierReturn @relation(fields: [supplierReturnId], references: [id], onDelete: Cascade)
   itemId              String
+  item                Item           @relation("SupplierReturnLineItem", fields: [itemId], references: [id])
   locationId          String
   batchId             String?
   quantity            Decimal        @db.Decimal(18, 4)
@@ -1457,6 +1476,7 @@ model QuotationLine {
   quotation   Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
   lineNo      Int
   itemId      String
+  item        Item      @relation("QuotationLineItem", fields: [itemId], references: [id])
   description String?
   quantity    Decimal   @db.Decimal(18, 4)
   unitPrice   Decimal   @db.Decimal(14, 2)
@@ -1509,6 +1529,7 @@ model SalesOrderLine {
   salesOrder        SalesOrder            @relation(fields: [salesOrderId], references: [id], onDelete: Cascade)
   lineNo            Int
   itemId            String
+  item              Item                  @relation("SoLineItem", fields: [itemId], references: [id])
   description       String?
   quantity          Decimal               @db.Decimal(18, 4)
   unitPrice         Decimal               @db.Decimal(14, 2)
@@ -1552,6 +1573,7 @@ model DeliveryChallanLine {
   salesOrderLineId String
   salesOrderLine   SalesOrderLine  @relation(fields: [salesOrderLineId], references: [id])
   itemId           String
+  item             Item            @relation("ChallanLineItem", fields: [itemId], references: [id])
   locationId       String?
   batchId          String?
   quantity         Decimal         @db.Decimal(18, 4)
