@@ -33,12 +33,12 @@ A feature is only marked ✅ when it works and has tests.
 - ✅ BOM versions, formulas, wastage allowance, alternatives, duplicate/substitute, compare, requirements
 - ✅ Stages, routes per SKU, workstations, departments
 - ✅ Production orders: release, availability, reservation, stage actions, backflush, manual issue, wastage, returns, FG receipt, QC stage, reversal, cancellation, history
-- 🟡 Manufacturing & production (shop-floor) UI
+- 🟢 Manufacturing (orders, stage pipeline, BOMs, setup) & production shop-floor UI — verified live end to end
 
 ## Stage 7 — Workforce & quality ✅ (API)
 - ✅ Workers, departments, attendance, productivity from production records
 - ✅ Defect categories, checklists, inspections, receipt QC hold & disposition, final QC from production
-- 🟡 Workforce & quality UI
+- 🟢 Workforce & quality UI
 
 ## Stage 8 — Sales & procurement ✅ (API)
 - ✅ Suppliers, multi-supplier items, requisitions, PO approval, GRN (partial, QC), supplier returns, reorder recommendations
