@@ -48,6 +48,12 @@ erp.example.com {
 }
 ```
 
+Client IPs (used for rate limiting and audit) come from `X-Forwarded-For`. The Next.js
+rewrite passes that header through unchanged and does not add the connecting address, so the
+TLS proxy in front **must** set it (Caddy does by default; nginx: `proxy_set_header
+X-Forwarded-For $remote_addr;`). Keep `TRUST_PROXY=1`. If nothing in front sets the header,
+use `TRUST_PROXY=0` (all requests then share the web server's address for rate limiting).
+
 Only the `web` port is published. The API, database, Redis and MinIO stay on the internal
 Docker network; the web app proxies `/api/*` to the API.
 
