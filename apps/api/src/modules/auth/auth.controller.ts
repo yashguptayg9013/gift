@@ -5,7 +5,7 @@ import { IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-valid
 import type { CookieOptions, Request, Response } from 'express';
 import { env } from '../../config/env';
 import { CurrentUser, Public } from '../../common/decorators';
-import { ACCESS_COOKIE, assertTrustedOrigin, REFRESH_COOKIE } from '../../common/guards/auth.guard';
+import { ACCESS_COOKIE, assertTrustedOrigin, REFRESH_COOKIE, SESSION_HINT_COOKIE } from '../../common/guards/auth.guard';
 import { AuthUser } from '../../common/request-context';
 import { AppError } from '../../common/errors';
 import { AuthService, IssuedTokens } from './auth.service';
@@ -71,6 +71,8 @@ export class AuthController {
   private setCookies(res: Response, t: IssuedTokens) {
     res.cookie(ACCESS_COOKIE, t.accessToken, cookieOpts(t.accessExpiresAt));
     res.cookie(REFRESH_COOKIE, t.refreshToken, cookieOpts(t.refreshExpiresAt, '/api/v1/auth'));
+    // Non-secret hint so the web proxy knows a refreshable session exists (contains no token).
+    res.cookie(SESSION_HINT_COOKIE, '1', { ...cookieOpts(t.refreshExpiresAt), httpOnly: false });
   }
 
   /**
@@ -90,7 +92,7 @@ export class AuthController {
   @Post('login')
   @HttpCode(200)
   async login(@Body() dto: LoginDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    if (req.headers['x-client'] !== 'mobile' && req.headers.origin) assertTrustedOrigin(req);
+    if (req.headers['x-client'] !== 'mobile') assertTrustedOrigin(req);
     const tokens = await this.auth.login(dto.email, dto.password, meta(req));
     return this.respond(req, res, tokens);
   }
@@ -114,6 +116,7 @@ export class AuthController {
     await this.auth.logout(user.sessionId, user.id);
     res.clearCookie(ACCESS_COOKIE, { path: '/' });
     res.clearCookie(REFRESH_COOKIE, { path: '/api/v1/auth' });
+    res.clearCookie(SESSION_HINT_COOKIE, { path: '/' });
   }
 
   @Get('me')

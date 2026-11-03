@@ -19,7 +19,7 @@
     "strictPropertyInitialization": false,
     "noFallthroughCasesInSwitch": true,
     "resolveJsonModule": true,
-    "types": ["node", "jest"]
+    "types": ["node", "jest", "multer"]
   },
   "include": ["src/**/*.ts", "test/**/*.ts", "prisma/**/*.ts"]
 }

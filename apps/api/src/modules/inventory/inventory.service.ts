@@ -452,7 +452,7 @@ export class InventoryService implements OnModuleInit {
    * Stock summary per item: on hand (all locations), usable on hand, reserved, available.
    * Available = usable on hand − reserved.
    */
-  async stockSummary(filter: { type?: ItemType; categoryId?: string; search?: string; warehouseId?: string; lowStockOnly?: boolean; itemIds?: string[] }) {
+  async stockSummary(filter: { type?: ItemType; categoryId?: string; search?: string; warehouseId?: string; lowStockOnly?: boolean; itemIds?: string[]; productId?: string }) {
     const rows = await this.prisma.$queryRaw<
       { itemId: string; onHand: Decimal; usableOnHand: Decimal; reserved: Decimal; nonUsable: Decimal; lastMovementAt: Date | null }[]
     >`
@@ -470,6 +470,7 @@ export class InventoryService implements OnModuleInit {
       where: {
         type: filter.type,
         categoryId: filter.categoryId,
+        productId: filter.productId,
         isActive: true,
         ...(filter.itemIds ? { id: { in: filter.itemIds } } : {}),
         ...(filter.search

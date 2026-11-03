@@ -9,6 +9,7 @@ import { env } from '../../config/env';
 
 export const ACCESS_COOKIE = 'puja_at';
 export const REFRESH_COOKIE = 'puja_rt';
+export const SESSION_HINT_COOKIE = 'puja_session';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 

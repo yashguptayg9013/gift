@@ -77,7 +77,9 @@ export class StockQueryDto {
   @IsOptional() @IsString() categoryId?: string;
   @IsOptional() @IsString() @MaxLength(100) search?: string;
   @IsOptional() @IsString() warehouseId?: string;
+  @IsOptional() @IsString() productId?: string;
   @IsOptional() @Transform(({ value }) => value === 'true' || value === true) @IsBoolean() lowStockOnly?: boolean;
+  @IsOptional() @Transform(({ value }) => (Array.isArray(value) ? value : String(value).split(',')).filter(Boolean)) @IsString({ each: true }) itemIds?: string[];
 }
 
 export class MovementQueryDto extends PageQueryDto {
