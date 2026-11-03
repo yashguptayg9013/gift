@@ -132,7 +132,7 @@ export default function OverviewPage() {
                 )}
               </div>
             </Section>
-            <Section title="Raw material stock by category" description={d?.rawMaterials.valueEstimate != null ? `Estimated value ${formatCurrency(d.rawMaterials.valueEstimate)} (${formatInteger(d.rawMaterials.valuedSkuCount)} priced SKUs)` : 'On-hand quantity per unit'}>
+            <Section title="Raw material stock by category" description={d?.rawMaterials.valueEstimate != null && d.rawMaterials.valuedSkuCount > 0 ?`Estimated value ${formatCurrency(d.rawMaterials.valueEstimate)} (${formatInteger(d.rawMaterials.valuedSkuCount)} priced SKUs)` : 'On-hand quantity per unit'}>
               {loading ? (
                 <LoadingRows rows={5} />
               ) : !d?.rawMaterials.byCategory.length ? (
