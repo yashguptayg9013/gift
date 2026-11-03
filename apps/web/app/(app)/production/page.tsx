@@ -1,8 +1,10 @@
-import type { Metadata } from 'next';
-import { ModulePlaceholder } from '@/components/shell/module-placeholder';
+'use client';
 
-export const metadata: Metadata = { title: 'Production' };
+import { useAuth } from '@/lib/auth';
+import { ShopFloor } from '@/components/manufacturing/shop-floor';
 
-export default function Page() {
-  return <ModulePlaceholder title="Production" description="Production orders and shop-floor progress." capabilities={['Production orders', 'Material availability & reservation', 'Stage start / pause / complete', 'Output, rejection & wastage', 'Worker assignment', 'Production history']} />;
+/** Supervisors land on all open stages; workers on their own tasks. */
+export default function ProductionPage() {
+  const { can } = useAuth();
+  return <ShopFloor defaultAll={can('production.stage.update.any')} />;
 }

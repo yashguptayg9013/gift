@@ -28,7 +28,7 @@ export interface OutputTarget {
   assignedWorkers: { id: string; name: string }[];
 }
 
-type CheckValue = { passed?: boolean; numericValue?: string; textValue?: string };
+export type CheckValue = { passed?: boolean; numericValue?: string; textValue?: string };
 
 /**
  * Record production at a stage. QC stages also capture checklist results and
@@ -209,7 +209,7 @@ export function OutputDialog({ target, open, onOpenChange }: { target: OutputTar
   );
 }
 
-function CheckRow({ item, value, onChange }: { item: ChecklistItem; value: CheckValue; onChange: (v: CheckValue) => void }) {
+export function CheckRow({ item, value, onChange }: { item: ChecklistItem; value: CheckValue; onChange: (v: CheckValue) => void }) {
   const num = value.numericValue ? Number(value.numericValue) : null;
   const outOfRange = num !== null && ((item.minValue !== null && num < item.minValue) || (item.maxValue !== null && num > item.maxValue));
   return (
