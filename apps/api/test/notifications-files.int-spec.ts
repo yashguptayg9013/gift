@@ -71,7 +71,7 @@ describe('Notifications, jobs and files (integration)', () => {
     expect(r.body.result.aiNarrated).toBe(false);
     const summaries = await admin.get(`${API}/ai/summaries`).expect(200);
     expect(summaries.body[0].content).toMatch(/Business summary/);
-    for (const name of ['low-stock-scan', 'production-delay-scan', 'po-overdue-scan', 'inspection-pending-scan']) {
+    for (const name of ['low-stock-scan', 'production-delay-scan', 'po-overdue-scan', 'inspection-pending-scan', 'ledger-integrity-check']) {
       await admin.post(`${API}/admin/jobs/${name}/run`).expect(200);
     }
     expect((await admin.post(`${API}/admin/jobs/drop-tables/run`)).status).toBe(400);

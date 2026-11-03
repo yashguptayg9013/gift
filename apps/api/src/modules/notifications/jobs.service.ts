@@ -7,12 +7,13 @@ import { RedisService } from '../../infra/redis/redis.service';
 import { AiService } from '../ai/ai.service';
 import { InsightsService } from '../ai/insights.service';
 import { AuditService } from '../audit/audit.service';
+import { InventoryService } from '../inventory/inventory.service';
 import { SettingsService } from '../settings/settings.service';
 import { DELIVERY_QUEUE, DeliveryJob, DeliveryService } from './delivery.service';
 import { NotificationsService } from './notifications.service';
 
 export const SCAN_QUEUE = 'puja-scans';
-export const JOB_NAMES = ['low-stock-scan', 'production-delay-scan', 'po-overdue-scan', 'inspection-pending-scan', 'daily-summary'] as const;
+export const JOB_NAMES = ['low-stock-scan', 'production-delay-scan', 'po-overdue-scan', 'inspection-pending-scan', 'daily-summary', 'ledger-integrity-check'] as const;
 export type JobName = (typeof JOB_NAMES)[number];
 
 const istDate = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
@@ -38,6 +39,7 @@ export class JobsService implements OnApplicationBootstrap, OnModuleDestroy {
     private readonly ai: AiService,
     private readonly settings: SettingsService,
     private readonly audit: AuditService,
+    private readonly inventory: InventoryService,
   ) {}
 
   async onApplicationBootstrap() {
@@ -51,6 +53,7 @@ export class JobsService implements OnApplicationBootstrap, OnModuleDestroy {
       ['po-overdue-scan', '23 9 * * *'],
       ['inspection-pending-scan', '37 */4 * * *'],
       ['daily-summary', `41 ${n.dailySummaryHour} * * *`],
+      ['ledger-integrity-check', '13 3 * * *'],
     ];
     for (const [name, pattern] of schedules) {
       await this.queue.upsertJobScheduler(name, { pattern, tz: 'Asia/Kolkata' }, { name });
@@ -82,6 +85,8 @@ export class JobsService implements OnApplicationBootstrap, OnModuleDestroy {
         return this.inspectionScan();
       case 'daily-summary':
         return this.dailySummary();
+      case 'ledger-integrity-check':
+        return this.integrityCheck();
     }
   }
 
@@ -137,6 +142,24 @@ export class JobsService implements OnApplicationBootstrap, OnModuleDestroy {
       });
     }
     return { pending: old.length };
+  }
+
+  /** Recomputes balances from the ledger; any mismatch is a critical alert to administrators. */
+  private async integrityCheck() {
+    const r = await this.inventory.verifyLedger();
+    if (!r.ok) {
+      await this.notifications.notify({
+        type: 'system.integrity',
+        title: `Inventory ledger mismatch on ${r.mismatches.length} balance(s)`,
+        body: 'Cached stock balances differ from the ledger. Do not post adjustments; contact the system administrator.',
+        severity: Severity.CRITICAL,
+        link: '/inventory',
+        dedupeKey: `integrity:${istDate()}`,
+        recipients: { permissions: ['admin.settings.manage'] },
+      });
+      this.logger.error({ mismatches: r.mismatches }, 'Ledger integrity check failed');
+    }
+    return { ok: r.ok, mismatches: r.mismatches.length };
   }
 
   /** Facts are deterministic; the AI (if configured) only writes the narrative. */

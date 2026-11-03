@@ -212,5 +212,6 @@ export const NOTIFICATION_TYPES = {
   'approvals.pending': 'Approval requested',
   'approvals.decided': 'Approval decided',
   'ai.daily_summary': 'Daily business summary',
+  'system.integrity': 'Inventory ledger integrity alert',
 } as const;
 export type NotificationType = keyof typeof NOTIFICATION_TYPES;
