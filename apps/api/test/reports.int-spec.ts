@@ -64,7 +64,8 @@ describe('Dashboard and reports (integration)', () => {
   });
 });
 
-function binary(res: NodeJS.ReadableStream & { on: (e: string, cb: (c?: Buffer) => void) => void }, cb: (err: Error | null, body: Buffer) => void) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function binary(res: any, cb: (err: Error | null, body: Buffer) => void) {
   const chunks: Buffer[] = [];
   res.on('data', (c?: Buffer) => c && chunks.push(c));
   res.on('end', () => cb(null, Buffer.concat(chunks)));

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Module, Param, Patch, Post, Put, Query, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Global, HttpCode, Module, Param, Patch, Post, Put, Query, Res } from '@nestjs/common';
 import { ApiHeader, ApiProduces, ApiTags } from '@nestjs/swagger';
 import { DocStatus, InquiryStatus, QuotationStatus, SalesOrderStatus } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
@@ -431,5 +431,6 @@ class SalesController {
   }
 }
 
+@Global()
 @Module({ controllers: [SalesController], providers: [SalesService, SalesDocumentsService], exports: [SalesService] })
 export class SalesModule {}

@@ -9,6 +9,7 @@ import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/app.factory';
 import { loadEnv } from '../src/config/env';
 import { AuthService } from '../src/modules/auth/auth.service';
+import { AI_CLIENT, AiClient } from '../src/modules/ai/ai.service';
 
 export const PASSWORD = 'Test-password-123';
 
@@ -40,12 +41,14 @@ export async function resetDb(prisma: PrismaClient) {
 
 let userSeq = 0;
 
-export async function createTestContext(): Promise<TestCtx> {
+export async function createTestContext(opts: { aiClient?: AiClient | null } = {}): Promise<TestCtx> {
   loadEnv();
   const prisma = new PrismaClient();
   await resetDb(prisma);
   await bootstrap(prisma);
-  const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+  let builder = Test.createTestingModule({ imports: [AppModule] });
+  if (opts.aiClient !== undefined) builder = builder.overrideProvider(AI_CLIENT).useValue(opts.aiClient);
+  const moduleRef = await builder.compile();
   const app = moduleRef.createNestApplication({ logger: false });
   configureApp(app);
   await app.init();

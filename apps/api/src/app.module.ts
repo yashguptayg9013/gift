@@ -36,7 +36,9 @@ import { FEATURE_MODULES } from './modules/feature-modules';
       },
     }),
     ThrottlerModule.forRoot({
-      throttlers: [{ name: 'default', ttl: 60_000, limit: env().NODE_ENV === 'test' ? 10_000 : 300 }],
+      throttlers: [{ name: 'default', ttl: 60_000, limit: 300 }],
+      // integration tests log in hundreds of users per minute; rate limits are covered separately
+      skipIf: () => env().NODE_ENV === 'test' && process.env.THROTTLE_IN_TESTS !== 'true',
     }),
     EventEmitterModule.forRoot({ wildcard: true, delimiter: '.' }),
     PrismaModule,

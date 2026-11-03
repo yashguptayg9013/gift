@@ -54,9 +54,11 @@ export const envSchema = z.object({
   WHATSAPP_TEMPLATE_NAME: z.string().optional(),
 
   ANTHROPIC_API_KEY: z.string().optional(),
-  ANTHROPIC_MODEL: z.string().default('claude-sonnet-5-5'),
+  ANTHROPIC_MODEL: z.string().default('claude-opus-5-5'),
+  /** reasoning effort for copilot turns (Claude Opus 5.5 defaults to medium) */
+  AI_EFFORT: z.enum(['low', 'medium', 'high', 'xhigh', 'max']).default('medium'),
   AI_MAX_TOOL_STEPS: z.coerce.number().int().positive().default(8),
-  AI_MAX_TOKENS: z.coerce.number().int().positive().default(4096),
+  AI_MAX_TOKENS: z.coerce.number().int().positive().default(16000),
 
   SENTRY_DSN: z.string().optional(),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),

@@ -180,7 +180,7 @@ export class InventoryService implements OnModuleInit {
    * Stock adjustment. Users holding inventory.adjust.approve post directly (unless the
    * settings force approval for everyone); everyone else creates an approval request.
    */
-  async adjust(dto: AdjustmentPayload, actor: AuthUser) {
+  async adjust(dto: AdjustmentPayload, actor: AuthUser, opts: { approvedById?: string } = {}) {
     if (!dto.reason?.trim()) throw Errors.validation('A reason is required for stock adjustments');
     for (const l of dto.lines) if (D(l.quantity).isZero()) throw Errors.validation('Adjustment quantity cannot be zero');
     const s = await this.settings.get('inventory');
@@ -198,7 +198,7 @@ export class InventoryService implements OnModuleInit {
       });
       return { status: 'PENDING_APPROVAL' as const, approval: req };
     }
-    const tx = await this.postAdjustment(dto, actor, { idempotencyKey: dto.idempotencyKey });
+    const tx = await this.postAdjustment(dto, actor, { idempotencyKey: dto.idempotencyKey, approvedById: opts.approvedById });
     return { status: 'POSTED' as const, transaction: await this.getTransaction(tx.id) };
   }
 
