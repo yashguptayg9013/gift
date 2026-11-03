@@ -33,7 +33,7 @@ function CountsList() {
   const { can } = useAuth();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState('');
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(() => params.get('new') === '1' && can('inventory.count'));
   const q = useStockCounts({ status: status || undefined, page });
   const warehouses = useWarehouses();
   const categories = useCategories();
@@ -41,9 +41,6 @@ function CountsList() {
   const whId = form.watch('warehouseId');
   const wh = warehouses.data?.find((w) => w.id === whId);
 
-  useEffect(() => {
-    if (params.get('new') === '1' && can('inventory.count')) setOpen(true);
-  }, [params, can]);
   useEffect(() => {
     if (!form.getValues('warehouseId') && warehouses.data?.[0]) form.setValue('warehouseId', warehouses.data[0].id);
   }, [warehouses.data, form]);

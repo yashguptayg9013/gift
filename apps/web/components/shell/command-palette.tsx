@@ -20,14 +20,15 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
     const t = setTimeout(() => setDebounced(term.trim()), 200);
     return () => clearTimeout(t);
   }, [term]);
-  React.useEffect(() => {
-    if (!open) setTerm('');
-  }, [open]);
+  const handleOpenChange = (o: boolean) => {
+    if (!o) setTerm('');
+    onOpenChange(o);
+  };
 
   const results = useQuery({ queryKey: ['search', debounced], queryFn: ({ signal }) => searchAll(debounced, signal), enabled: open && debounced.length >= 2 });
 
   const go = (href: string) => {
-    onOpenChange(false);
+    handleOpenChange(false);
     router.push(href);
   };
   const pages = NAV.filter((n) => can(n.anyOf, 'any'));
@@ -37,7 +38,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
   const groupCls = '[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground';
 
   return (
-    <DialogP.Root open={open} onOpenChange={onOpenChange}>
+    <DialogP.Root open={open} onOpenChange={handleOpenChange}>
       <DialogP.Portal>
         <DialogP.Overlay className="fixed inset-0 z-50 bg-black/40" />
         <DialogP.Content className="fixed top-[12vh] left-1/2 z-50 w-[calc(100vw-2rem)] max-w-xl -translate-x-1/2 overflow-hidden rounded-lg border bg-popover shadow-lg">

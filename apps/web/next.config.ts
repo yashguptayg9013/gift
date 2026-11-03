@@ -1,9 +1,12 @@
+import path from 'node:path';
 import type { NextConfig } from 'next';
 
 const API_URL = process.env.API_URL ?? 'http://localhost:4000';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // pnpm monorepo: resolve workspace packages from the repository root
+  turbopack: { root: path.join(__dirname, '../..') },
   poweredByHeader: false,
   transpilePackages: ['@puja/shared'],
   // The browser only ever talks to this origin; Next proxies /api/* to the NestJS API

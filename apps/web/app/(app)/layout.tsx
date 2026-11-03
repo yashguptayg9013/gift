@@ -15,17 +15,19 @@ const COLLAPSE_KEY = 'puja.sidebar.collapsed';
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const me = useMeQuery();
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = React.useState(false);
-  const [mobileOpen, setMobileOpen] = React.useState(false);
-
-  React.useEffect(() => {
+  // The shell only renders after /auth/me resolves on the client, so reading
+  // localStorage in the initializer cannot cause a hydration mismatch.
+  const [collapsed, setCollapsed] = React.useState(() => {
     try {
-      setCollapsed(localStorage.getItem(COLLAPSE_KEY) === '1');
+      return typeof window !== 'undefined' && localStorage.getItem(COLLAPSE_KEY) === '1';
     } catch {
-      /* storage unavailable */
+      return false;
     }
-  }, []);
-  React.useEffect(() => setMobileOpen(false), [pathname]);
+  });
+  // Mobile drawer closes on navigation: track the path it was opened on.
+  const [mobileOpenAt, setMobileOpenAt] = React.useState<string | null>(null);
+  const mobileOpen = mobileOpenAt === pathname;
+  const setMobileOpen = (o: boolean) => setMobileOpenAt(o ? pathname : null);
 
   const toggle = () => {
     setCollapsed((c) => {

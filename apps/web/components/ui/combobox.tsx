@@ -51,6 +51,7 @@ function ComboboxImpl({
   ...rest
 }: BaseProps & { staticOptions?: ComboOption[]; load?: (s: string) => Promise<ComboOption[]>; queryKey?: readonly unknown[] }) {
   const [open, setOpen] = React.useState(false);
+  const listId = React.useId();
   const [search, setSearch] = React.useState('');
   const [debounced, setDebounced] = React.useState('');
   const [picked, setPicked] = React.useState<ComboOption | null>(null);
@@ -77,6 +78,8 @@ function ComboboxImpl({
           type="button"
           role="combobox"
           aria-expanded={open}
+          aria-controls={listId}
+          aria-haspopup="listbox"
           aria-invalid={rest['aria-invalid']}
           disabled={disabled}
           className={cn(
@@ -88,7 +91,7 @@ function ComboboxImpl({
           <ChevronsUpDown className="size-3.5 shrink-0 opacity-50" />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] min-w-64 p-0">
+      <PopoverContent id={listId} className="w-[var(--radix-popover-trigger-width)] min-w-64 p-0">
         <Command shouldFilter={!load} className="flex flex-col">
           <div className="flex items-center border-b px-2">
             <Command.Input value={search} onValueChange={setSearch} placeholder="Search…" className="h-8 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" />

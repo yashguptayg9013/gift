@@ -1,3 +1,5 @@
+'use client';
+
 import { Cable } from 'lucide-react';
 import { EmptyState, PageHeader, Section } from '@/components/ui/feedback';
 

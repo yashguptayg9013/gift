@@ -6,7 +6,7 @@ import { NextResponse, type NextRequest } from 'next/server';
  * permission. Users with only a refresh cookie are let through; the client
  * refreshes the access token transparently.
  */
-const PUBLIC_PATHS = ['/login', '/forgot-password', '/reset-password'];
+const PUBLIC_PATHS = ['/login', '/forgot-password', '/reset-password', '/design-system'];
 
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;

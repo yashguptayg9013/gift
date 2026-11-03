@@ -3,7 +3,7 @@
 import { Save, Send, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api/client';
 import { useApiMutation } from '@/lib/api/hooks';
@@ -20,19 +20,22 @@ import { ConfirmDialog } from '@/components/ui/overlays';
 
 export default function CountDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { can } = useAuth();
   const q = useStockCount(id);
-  const [counts, setCounts] = useState<Record<string, string>>({});
+  if (q.error) return <ErrorState error={q.error} onRetry={() => q.refetch()} />;
+  if (!q.data) return <LoadingRows rows={8} />;
+  // remount the editor whenever fresh server data arrives so entered counts reset to saved values
+  return <CountSheet key={q.dataUpdatedAt} id={id} c={q.data} />;
+}
+
+function CountSheet({ id, c }: { id: string; c: StockCountDetail }) {
+  const { can } = useAuth();
+  const [counts, setCounts] = useState<Record<string, string>>(() => Object.fromEntries(c.lines.map((l) => [l.id, l.countedQty === null ? '' : String(l.countedQty)])));
   const [filter, setFilter] = useState('');
   const [confirmSubmit, setConfirmSubmit] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
 
-  useEffect(() => {
-    if (q.data) setCounts(Object.fromEntries(q.data.lines.map((l) => [l.id, l.countedQty === null ? '' : String(l.countedQty)])));
-  }, [q.data]);
-
-  const editable = q.data?.status === 'DRAFT' && can('inventory.count');
-  const dirty = useMemo(() => q.data?.lines.some((l) => (l.countedQty === null ? '' : String(l.countedQty)) !== (counts[l.id] ?? '')) ?? false, [q.data, counts]);
+  const editable = c.status === 'DRAFT' && can('inventory.count');
+  const dirty = useMemo(() => c.lines.some((l) => (l.countedQty === null ? '' : String(l.countedQty)) !== (counts[l.id] ?? '')), [c, counts]);
 
   const save = useApiMutation(
     () =>
@@ -53,9 +56,6 @@ export default function CountDetailPage() {
   });
   const cancel = useApiMutation(() => api.post(`/inventory/stock-counts/${id}/cancel`), { invalidate: [inventoryKeys.all], success: 'Count cancelled', onSuccess: () => setConfirmCancel(false) });
 
-  if (q.error) return <ErrorState error={q.error} onRetry={() => q.refetch()} />;
-  if (!q.data) return <LoadingRows rows={8} />;
-  const c = q.data;
   const counted = c.lines.filter((l) => (counts[l.id] ?? '') !== '').length;
   const variances = c.lines.filter((l) => counts[l.id] !== '' && counts[l.id] !== undefined && Number(counts[l.id]) !== l.systemQty).length;
   const visible = c.lines.filter((l) => !filter || `${l.item?.code} ${l.item?.name} ${l.location?.code}`.toLowerCase().includes(filter.toLowerCase()));
