@@ -1,26 +1,205 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+/*
+ * PUJA OS design tokens.
+ * Neutral, ink-toned surfaces with a restrained indigo primary. Semantic colours are
+ * used for status only. All components read these variables — never raw colours.
+ */
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: oklch(0.992 0.002 264);
+  --foreground: oklch(0.21 0.018 265);
+  --card: oklch(1 0 0);
+  --card-foreground: var(--foreground);
+  --popover: oklch(1 0 0);
+  --popover-foreground: var(--foreground);
+  --muted: oklch(0.966 0.004 264);
+  --muted-foreground: oklch(0.52 0.016 262);
+  --subtle: oklch(0.982 0.003 264);
+  --border: oklch(0.918 0.005 264);
+  --input: oklch(0.89 0.007 264);
+  --ring: oklch(0.55 0.16 272);
+  --primary: oklch(0.43 0.15 273);
+  --primary-foreground: oklch(0.99 0.004 270);
+  --secondary: oklch(0.955 0.006 264);
+  --secondary-foreground: oklch(0.27 0.02 265);
+  --accent: oklch(0.955 0.018 274);
+  --accent-foreground: oklch(0.38 0.14 273);
+  --success: oklch(0.56 0.13 155);
+  --warning: oklch(0.66 0.15 65);
+  --danger: oklch(0.56 0.2 25);
+  --info: oklch(0.57 0.13 240);
+  --sidebar: oklch(0.978 0.003 264);
+  --sidebar-foreground: oklch(0.33 0.018 265);
+
+  --chart-1: oklch(0.5 0.15 273);
+  --chart-2: oklch(0.62 0.12 190);
+  --chart-3: oklch(0.7 0.14 75);
+  --chart-4: oklch(0.6 0.17 25);
+  --chart-5: oklch(0.6 0.1 310);
+  --chart-6: oklch(0.55 0.09 150);
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --shadow-xs: 0 1px 1px oklch(0.2 0.02 265 / 0.04);
+  --shadow-sm: 0 1px 2px oklch(0.2 0.02 265 / 0.06), 0 1px 1px oklch(0.2 0.02 265 / 0.03);
+  --shadow-md: 0 4px 12px oklch(0.2 0.02 265 / 0.08), 0 1px 3px oklch(0.2 0.02 265 / 0.06);
+  --shadow-lg: 0 12px 32px oklch(0.2 0.02 265 / 0.12), 0 2px 6px oklch(0.2 0.02 265 / 0.06);
+}
+
+.dark {
+  --background: oklch(0.165 0.007 265);
+  --foreground: oklch(0.94 0.005 265);
+  --card: oklch(0.195 0.008 265);
+  --card-foreground: var(--foreground);
+  --popover: oklch(0.21 0.009 265);
+  --popover-foreground: var(--foreground);
+  --muted: oklch(0.235 0.009 265);
+  --muted-foreground: oklch(0.69 0.012 265);
+  --subtle: oklch(0.185 0.008 265);
+  --border: oklch(0.28 0.01 265);
+  --input: oklch(0.32 0.012 265);
+  --ring: oklch(0.68 0.14 275);
+  --primary: oklch(0.72 0.13 276);
+  --primary-foreground: oklch(0.17 0.02 270);
+  --secondary: oklch(0.255 0.01 265);
+  --secondary-foreground: oklch(0.92 0.006 265);
+  --accent: oklch(0.27 0.035 274);
+  --accent-foreground: oklch(0.85 0.08 276);
+  --success: oklch(0.72 0.14 155);
+  --warning: oklch(0.79 0.14 75);
+  --danger: oklch(0.7 0.17 25);
+  --info: oklch(0.72 0.12 240);
+  --sidebar: oklch(0.18 0.008 265);
+  --sidebar-foreground: oklch(0.8 0.01 265);
+
+  --chart-1: oklch(0.7 0.13 276);
+  --chart-2: oklch(0.74 0.11 190);
+  --chart-3: oklch(0.8 0.13 80);
+  --chart-4: oklch(0.7 0.16 25);
+  --chart-5: oklch(0.72 0.1 310);
+  --chart-6: oklch(0.7 0.09 150);
+
+  --shadow-xs: 0 1px 1px oklch(0 0 0 / 0.3);
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.35);
+  --shadow-md: 0 4px 12px oklch(0 0 0 / 0.4);
+  --shadow-lg: 0 12px 32px oklch(0 0 0 / 0.5);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle: var(--subtle);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* type scale: 12 / 13 / 14 / 16 / 20 / 24 */
+  --text-xs: 12px;
+  --text-xs--line-height: 16px;
+  --text-sm: 13px;
+  --text-sm--line-height: 18px;
+  --text-base: 14px;
+  --text-base--line-height: 20px;
+  --text-lg: 16px;
+  --text-lg--line-height: 24px;
+  --text-xl: 20px;
+  --text-xl--line-height: 28px;
+  --text-2xl: 24px;
+  --text-2xl--line-height: 32px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 20px;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 22%, transparent);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Tone utility used by badges and status indicators */
+@utility tone-neutral {
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+@utility tone-info {
+  background: color-mix(in oklab, var(--info) 13%, transparent);
+  color: var(--info);
+}
+@utility tone-success {
+  background: color-mix(in oklab, var(--success) 13%, transparent);
+  color: var(--success);
+}
+@utility tone-warning {
+  background: color-mix(in oklab, var(--warning) 15%, transparent);
+  color: var(--warning);
+}
+@utility tone-danger {
+  background: color-mix(in oklab, var(--danger) 12%, transparent);
+  color: var(--danger);
+}
+@utility tone-accent {
+  background: var(--accent);
+  color: var(--accent-foreground);
 }
