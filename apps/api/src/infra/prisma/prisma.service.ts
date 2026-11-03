@@ -7,7 +7,7 @@ export type Db = PrismaClient | Tx;
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   constructor() {
-    super({ log: process.env.PRISMA_LOG_QUERIES === 'true' ? ['query', 'warn', 'error'] : ['warn', 'error'] });
+    super({ log: process.env.PRISMA_LOG_QUERIES === 'true' ? ['query', 'warn', 'error'] : process.env.NODE_ENV === 'test' ? [] : ['warn', 'error'] });
   }
 
   async onModuleInit() {
