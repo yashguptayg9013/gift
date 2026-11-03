@@ -60,7 +60,7 @@ services:
       STORAGE_DRIVER: s3
       S3_ENDPOINT: http://minio:9000
       S3_BUCKET: ${S3_BUCKET:-puja-files}
-      TRUST_PROXY: "true"
+      TRUST_PROXY: "2"   # reverse proxy (TLS) + Next.js web server in front of the API
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }

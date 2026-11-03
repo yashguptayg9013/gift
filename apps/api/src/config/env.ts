@@ -14,7 +14,11 @@ export const envSchema = z.object({
   APP_URL: z.string().url().default('http://localhost:3000'),
   /** comma separated list of allowed browser origins (CORS + CSRF origin check) */
   CORS_ORIGINS: z.string().default('http://localhost:3000'),
-  TRUST_PROXY: bool.default(false),
+  /** number of reverse-proxy hops in front of the API (e.g. 2 = TLS proxy + Next.js), or true/false */
+  TRUST_PROXY: z
+    .union([z.boolean(), z.string()])
+    .default(false)
+    .transform((v) => (typeof v === 'boolean' ? (v ? 1 : 0) : /^\d+$/.test(v) ? Number(v) : ['1', 'true', 'yes', 'on'].includes(v.toLowerCase()) ? 1 : 0)),
 
   DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().default('redis://localhost:6379'),

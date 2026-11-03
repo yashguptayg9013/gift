@@ -21,7 +21,7 @@ export async function createApp(opts: { logger?: boolean } = {}): Promise<INestA
 export function configureApp(app: INestApplication) {
   const e = env();
   const express = app.getHttpAdapter().getInstance();
-  if (e.TRUST_PROXY) express.set('trust proxy', 1);
+  if (e.TRUST_PROXY > 0) express.set('trust proxy', e.TRUST_PROXY);
   express.disable('x-powered-by');
 
   app.use((req: Request, res: Response, next: NextFunction) => {
