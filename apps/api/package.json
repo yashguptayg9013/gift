@@ -15,7 +15,8 @@
     "prisma:migrate": "prisma migrate deploy",
     "prisma:migrate:dev": "prisma migrate dev",
     "db:seed": "ts-node --transpile-only src/cli/seed.ts",
-    "db:seed:prod": "node dist/cli/seed.js"
+    "db:seed:prod": "node dist/cli/seed.js",
+    "docs:api": "ts-node --transpile-only src/cli/api-docs.ts"
   },
   "prisma": {
     "seed": "ts-node --transpile-only src/cli/seed.ts"

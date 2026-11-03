@@ -365,4 +365,7 @@ Jobs are idempotent (dedupe keys on notifications). With `JOBS_ENABLED=false`
 | TypeScript **5.9** | Nest relies on `emitDecoratorMetadata`, not yet a target of the native TS 7 compiler. |
 | Next.js **16.2.7** / React **19.2** | Versions from the uploaded project, kept as-is. |
 | Decimal(18,4) quantities | Lengths/areas (metres, m²) need fractions; floats are never used for stock. |
+| Claude `claude-opus-5-5`, effort `medium`, manual tool loop | Each turn is persisted, permission-re-checked and audited; server-side refusal fallbacks enabled; tools + static system prompt cached. Model and effort are env-configurable. |
+| Standard vs. wastage allowance | Backflush consumes the BOM standard quantity; the wastage allowance is only reserved. Actual scrap is reported explicitly, so wastage reports compare reported wastage with the allowance. |
+| Final-stage rejects | Received into the warehouse's `REJECTED` location (visible, never available); releasing them requires `quality.rejection.release`. |
 | Ledger + cached balance | O(1) stock reads, full traceability, and a rebuild/verify job can recompute balances from the ledger. |
